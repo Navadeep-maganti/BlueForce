@@ -9,6 +9,7 @@ from apps.jobs.models import Job
 from apps.workers.models import WorkerProfile
 from apps.employers.models import EmployerProfile
 from apps.notifications.models import Notification
+from apps.notifications.services import create_notification
 from apps.matching.services import calculate_job_match
 from .serializers import (
     ApplicationSerializer,
@@ -67,19 +68,21 @@ class ApplyJobView(APIView):
             completed=True
         )
 
-        Notification.objects.create(
+        create_notification(
             user=job.employer.user,
+            notification_type='APPLICATION_RECEIVED',
             title=f"New Candidate Applied: {worker.full_name}",
             message=f"{worker.full_name} ({worker.primary_trade}) applied for {job.title} with a {match_score}% match score.",
-            notification_type='application_update',
+            related_object_id=application.id,
             action_url='/employer/pipeline'
         )
 
-        Notification.objects.create(
+        create_notification(
             user=request.user,
+            notification_type='APPLICATION_STATUS_CHANGED',
             title="Application Sent Successfully",
             message=f"Your application for {job.title} at {job.employer.company_name} was delivered.",
-            notification_type='application_update',
+            related_object_id=application.id,
             action_url='/worker/applications'
         )
 
@@ -180,11 +183,12 @@ class ApplicationStageUpdateView(APIView):
             completed=True
         )
 
-        Notification.objects.create(
+        create_notification(
             user=application.worker.user,
+            notification_type='SHORTLISTED' if new_stage == Application.StageChoices.SHORTLISTED else 'APPLICATION_STATUS_CHANGED',
             title=f"Application Update: {new_stage}",
             message=f"Your application for {application.job.title} at {application.job.employer.company_name} is now: {new_stage}.",
-            notification_type='application_update',
+            related_object_id=application.id,
             action_url='/worker/applications'
         )
 
@@ -233,11 +237,12 @@ class ScheduleInterviewView(APIView):
             completed=True
         )
 
-        Notification.objects.create(
+        create_notification(
             user=application.worker.user,
+            notification_type='INTERVIEW_SCHEDULED',
             title="Interview Scheduled! 📅",
             message=f"{application.job.employer.company_name} scheduled an interview for {application.job.title} on {interview.date or interview.scheduled_at} at {interview.time}.",
-            notification_type='interview',
+            related_object_id=interview.id,
             action_url='/worker/applications'
         )
 
@@ -364,11 +369,12 @@ class InterviewCancelView(APIView):
             completed=False
         )
 
-        Notification.objects.create(
+        create_notification(
             user=interview.application.worker.user,
-            title="Interview Notice",
+            notification_type='INTERVIEW_CANCELLED',
+            title="Interview Notice ⚠️",
             message=f"Your scheduled interview for {interview.application.job.title} was cancelled: {reason}",
-            notification_type='interview',
+            related_object_id=interview.id,
             action_url='/worker/applications'
         )
 

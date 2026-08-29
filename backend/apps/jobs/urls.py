@@ -6,8 +6,12 @@ from .views import (
     PublicJobDetailView,
 )
 from apps.applications.views import ApplyJobView
+from apps.matching.views import WorkerRecommendedJobsView
 
 urlpatterns = [
+    # AI Recommended Jobs for Worker (Phase 11)
+    path('recommended/', WorkerRecommendedJobsView.as_view(), name='jobs-recommended'),
+
     # Public Job Discovery & Detail
     path('', PublicJobListView.as_view(), name='public-job-list'),
     path('<int:pk>/', PublicJobDetailView.as_view(), name='public-job-detail'),

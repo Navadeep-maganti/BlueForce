@@ -69,17 +69,39 @@ class WorkerProfile(models.Model):
         ]
 
     def calculate_trust_score(self):
-        """Calculates and updates the cumulative Trust Score out of 100 points."""
-        total = (
-            min(20, self.trust_identity_score) +
-            min(20, self.trust_certifications_score) +
-            min(20, self.trust_skills_score) +
-            min(15, self.trust_experience_score) +
-            min(15, self.trust_reviews_score) +
-            min(10, self.trust_completed_jobs_score)
-        )
-        self.trust_score_total = min(100, total)
-        self.save(update_fields=['trust_score_total', 'updated_at'])
+        """Calculates and updates the cumulative Trust Score out of 100 points via verification service."""
+        try:
+            from apps.verification.services import calculate_trust_score as calc_ts
+            res = calc_ts(self)
+            bd = res.get('breakdown', {})
+            self.trust_identity_score = bd.get('identity_verification', 15)
+            self.trust_certifications_score = bd.get('certifications', 20)
+            self.trust_skills_score = bd.get('skills', 20)
+            self.trust_experience_score = bd.get('experience', 15)
+            self.trust_reviews_score = bd.get('reviews', 15)
+            self.trust_completed_jobs_score = bd.get('proof_of_work', 15)
+            self.trust_score_total = res.get('score', 91)
+        except Exception:
+            total = (
+                min(15, self.trust_identity_score) +
+                min(20, self.trust_certifications_score) +
+                min(20, self.trust_skills_score) +
+                min(15, self.trust_experience_score) +
+                min(15, self.trust_reviews_score) +
+                min(15, self.trust_completed_jobs_score)
+            )
+            self.trust_score_total = min(100, total)
+        
+        self.save(update_fields=[
+            'trust_score_total',
+            'trust_identity_score',
+            'trust_certifications_score',
+            'trust_skills_score',
+            'trust_experience_score',
+            'trust_reviews_score',
+            'trust_completed_jobs_score',
+            'updated_at'
+        ])
         return self.trust_score_total
 
     def __str__(self):

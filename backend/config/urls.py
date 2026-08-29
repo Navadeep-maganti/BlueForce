@@ -13,6 +13,19 @@ from apps.applications.views import (
     InterviewCancelView,
     InterviewCompleteView,
 )
+from apps.verification.views import (
+    AdminVerificationQueueListView,
+    AdminVerificationApproveView,
+    AdminVerificationRejectView,
+)
+from apps.analytics.views import (
+    WorkerDashboardAggregationView,
+    EmployerDashboardAggregationView,
+)
+from apps.matching.views import (
+    WorkerRecommendedJobsView,
+    EmployerRecommendedCandidatesView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,6 +41,11 @@ urlpatterns = [
     path('api/v1/employer/jobs/', EmployerJobListCreateView.as_view(), name='employer-jobs-list-create'),
     path('api/v1/employer/jobs/<int:pk>/', EmployerJobDetailView.as_view(), name='employer-jobs-detail'),
 
+    # Explainable Matching Engine (Phase 11)
+    path('api/v1/jobs/recommended/', WorkerRecommendedJobsView.as_view(), name='root-jobs-recommended'),
+    path('api/v1/employer/candidates/recommended/', EmployerRecommendedCandidatesView.as_view(), name='root-candidates-recommended'),
+    path('api/v1/matching/', include('apps.matching.urls')),
+
     # Applications System
     path('api/v1/applications/', include('apps.applications.urls')),
 
@@ -37,8 +55,17 @@ urlpatterns = [
     path('api/v1/interviews/<int:pk>/cancel/', InterviewCancelView.as_view(), name='interviews-root-cancel'),
     path('api/v1/interviews/<int:pk>/complete/', InterviewCompleteView.as_view(), name='interviews-root-complete'),
 
+    # Verification Workflow (Phase 8)
     path('api/v1/verification/', include('apps.verification.urls')),
-    path('api/v1/matching/', include('apps.matching.urls')),
+    path('api/v1/admin/verifications/', AdminVerificationQueueListView.as_view(), name='admin-verifications-list'),
+    path('api/v1/admin/verifications/<int:pk>/approve/', AdminVerificationApproveView.as_view(), name='admin-verifications-approve'),
+    path('api/v1/admin/verifications/<int:pk>/reject/', AdminVerificationRejectView.as_view(), name='admin-verifications-reject'),
+
+    # Dashboard Aggregation APIs (Phase 10)
+    path('api/v1/dashboard/worker/', WorkerDashboardAggregationView.as_view(), name='dashboard-worker-root'),
+    path('api/v1/dashboard/employer/', EmployerDashboardAggregationView.as_view(), name='dashboard-employer-root'),
+    path('api/v1/dashboard/', include('apps.analytics.urls')),
+
     path('api/v1/reports/', include('apps.reports.urls')),
     path('api/v1/notifications/', include('apps.notifications.urls')),
     path('api/v1/analytics/', include('apps.analytics.urls')),

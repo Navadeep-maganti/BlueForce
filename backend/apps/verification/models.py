@@ -6,16 +6,24 @@ class VerificationDocument(models.Model):
         EMPLOYER = 'employer', 'Employer'
 
     class DocTypeChoices(models.TextChoices):
+        IDENTITY = 'IDENTITY', 'Identity / National ID'
+        CERTIFICATE = 'CERTIFICATE', 'Trade / Technical Certificate'
+        TRADE_LICENSE = 'TRADE_LICENSE', 'Trade License'
+        OTHER = 'OTHER', 'Other Document'
+        # Legacy Aliases
         AADHAAR = 'Aadhaar / National ID', 'Aadhaar / National ID'
         ITI_DIPLOMA = 'ITI Diploma', 'ITI Diploma'
-        TRADE_LICENSE = 'Trade License', 'Trade License'
         GST = 'GST Certificate', 'GST Certificate'
         EXPERIENCE_LETTER = 'Experience Letter', 'Experience Letter'
 
     class StatusChoices(models.TextChoices):
-        VERIFIED = 'verified', 'Verified ✓'
-        PENDING = 'pending', 'Pending Review'
-        REJECTED = 'rejected', 'Rejected'
+        PENDING = 'PENDING', 'Pending Review'
+        APPROVED = 'APPROVED', 'Approved / Verified'
+        REJECTED = 'REJECTED', 'Rejected'
+        # Legacy Aliases
+        VERIFIED_LEGACY = 'verified', 'Verified ✓'
+        PENDING_LEGACY = 'pending', 'Pending Review'
+        REJECTED_LEGACY = 'rejected', 'Rejected'
 
     entity_type = models.CharField(
         max_length=20,
@@ -40,11 +48,13 @@ class VerificationDocument(models.Model):
     doc_type = models.CharField(
         max_length=50,
         choices=DocTypeChoices.choices,
-        default=DocTypeChoices.AADHAAR,
+        default=DocTypeChoices.IDENTITY,
         db_index=True
     )
     doc_number = models.CharField(max_length=150, db_index=True)
-    file_url = models.URLField(max_length=500)
+    file_url = models.CharField(max_length=500, blank=True, null=True)
+    document_file = models.FileField(upload_to='verification_docs/%Y/%m/', blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
     status = models.CharField(
         max_length=20,
         choices=StatusChoices.choices,
@@ -63,6 +73,9 @@ class VerificationDocument(models.Model):
             models.Index(fields=['status', 'entity_type']),
             models.Index(fields=['doc_type', 'status']),
         ]
+
+    def is_approved(self):
+        return self.status in [self.StatusChoices.APPROVED, self.StatusChoices.VERIFIED_LEGACY]
 
     def __str__(self):
         entity_name = self.worker.full_name if self.worker else (self.employer.company_name if self.employer else 'Unknown')

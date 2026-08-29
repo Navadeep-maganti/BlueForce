@@ -28,6 +28,8 @@ import { authApi, RegisterPayload } from './api/authApi';
 import { workerApi } from './api/workerApi';
 import { jobApi, JobFilterParams } from './api/jobApi';
 import { applicationApi } from './api/applicationApi';
+import { verificationApi } from './api/verificationApi';
+import { notificationApi } from './api/notificationApi';
 
 const STORAGE_KEYS = {
   USER: 'kaushal_current_user',
@@ -261,6 +263,47 @@ class Store {
     } catch (e) {
       console.log('Candidates loaded from cache/fallback');
     }
+  }
+
+  async fetchNotifications() {
+    try {
+      const res = await notificationApi.getNotifications();
+      if (res?.data?.notifications) {
+        this.notifications = res.data.notifications.map((n: any) => ({
+          id: String(n.id),
+          userId: this.currentUser?.id || 'worker_1',
+          title: n.title,
+          message: n.message,
+          timestamp: n.timestamp || 'Just now',
+          isRead: n.is_read,
+          type: n.type || n.notification_type || 'general',
+          actionUrl: n.action_url,
+        }));
+        this.saveToStorage();
+      }
+    } catch (e) {
+      console.log('Notifications loaded from cache');
+    }
+  }
+
+  async markNotificationRead(id: string) {
+    const notif = this.notifications.find((n) => n.id === id);
+    if (notif) {
+      notif.isRead = true;
+      this.saveToStorage();
+    }
+    const numId = parseInt(id.replace(/\D/g, ''), 10);
+    if (numId) {
+      notificationApi.markAsRead(numId).catch(() => {});
+    }
+  }
+
+  async markAllNotificationsRead() {
+    this.notifications.forEach((n) => {
+      n.isRead = true;
+    });
+    this.saveToStorage();
+    notificationApi.markAllAsRead().catch(() => {});
   }
 
   async login(usernameOrEmail: string, password: string): Promise<{ success: boolean; message: string; user?: User }> {
@@ -690,16 +733,21 @@ class Store {
   // Admin Actions
   verifyDocument(docId: string, statusOrApproved: 'verified' | 'rejected' | boolean, reason?: string) {
     const doc = this.verifications.find((v) => v.id === docId);
+    const isApproved = typeof statusOrApproved === 'boolean' ? statusOrApproved : statusOrApproved === 'verified';
+    
     if (doc) {
-      if (typeof statusOrApproved === 'boolean') {
-        doc.status = statusOrApproved ? 'verified' : 'rejected';
-      } else {
-        doc.status = statusOrApproved;
-      }
+      doc.status = isApproved ? 'verified' : 'rejected';
       if (reason) doc.rejectionReason = reason;
       doc.reviewedBy = 'Admin Moderator';
       doc.reviewedAt = new Date().toISOString().split('T')[0];
       this.saveToStorage();
+    }
+
+    const numericId = parseInt(docId.replace(/\D/g, ''), 10) || 1;
+    if (isApproved) {
+      verificationApi.approveDocument(numericId).catch(() => console.log('Approved locally'));
+    } else {
+      verificationApi.rejectDocument(numericId, reason).catch(() => console.log('Rejected locally'));
     }
   }
 

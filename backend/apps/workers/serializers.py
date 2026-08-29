@@ -193,42 +193,8 @@ class WorkerProfileAggregatedSerializer(serializers.ModelSerializer):
         }
 
     def get_trust_score(self, obj):
-        return {
-            'total': obj.trust_score_total,
-            'breakdown': {
-                'identity': {
-                    'score': obj.trust_identity_score,
-                    'max': 20,
-                    'label': 'Aadhaar Biometric eKYC Verified' if obj.user.is_verified else 'Pending Verification',
-                },
-                'certifications': {
-                    'score': obj.trust_certifications_score,
-                    'max': 20,
-                    'verified_count': obj.certifications.filter(verification_status='verified').count(),
-                },
-                'skills': {
-                    'score': obj.trust_skills_score,
-                    'max': 20,
-                    'tested_count': obj.skills.filter(is_verified=True).count(),
-                },
-                'experience': {
-                    'score': obj.trust_experience_score,
-                    'max': 15,
-                    'verified_years': obj.years_of_experience,
-                },
-                'employer_reviews': {
-                    'score': obj.trust_reviews_score,
-                    'max': 15,
-                    'avg_rating': 4.9,
-                    'review_count': obj.reviews.count(),
-                },
-                'completed_jobs': {
-                    'score': obj.trust_completed_jobs_score,
-                    'max': 10,
-                    'completed_count': obj.proof_of_works.count(),
-                },
-            },
-        }
+        from apps.verification.services import calculate_trust_score
+        return calculate_trust_score(obj)
 
 class CandidateDiscoveryCardSerializer(serializers.ModelSerializer):
     """
@@ -328,14 +294,5 @@ class PublicWorkerProfileSerializer(serializers.ModelSerializer):
         ]
 
     def get_trust_score(self, obj):
-        return {
-            'total': obj.trust_score_total,
-            'breakdown': {
-                'identity': { 'score': obj.trust_identity_score, 'max': 20, 'verified': obj.user.is_verified, 'label': 'Aadhaar Biometric eKYC' },
-                'certifications': { 'score': obj.trust_certifications_score, 'max': 20, 'verified_count': obj.certifications.filter(verification_status='verified').count() },
-                'skills': { 'score': obj.trust_skills_score, 'max': 20, 'tested_count': obj.skills.filter(is_verified=True).count() },
-                'experience': { 'score': obj.trust_experience_score, 'max': 15, 'verified_years': obj.years_of_experience },
-                'employer_reviews': { 'score': obj.trust_reviews_score, 'max': 15, 'review_count': obj.reviews.count() },
-                'completed_jobs': { 'score': obj.trust_completed_jobs_score, 'max': 10, 'completed_count': obj.proof_of_works.count() },
-            }
-        }
+        from apps.verification.services import calculate_trust_score
+        return calculate_trust_score(obj)
