@@ -32,6 +32,11 @@
   --color-danger-light: #fef2f2;
   --color-danger-border: #fecaca;
 
+  --color-info: #0284c7;
+  --color-info-dark: #075985;
+  --color-info-light: #f0f9ff;
+  --color-info-border: #bae6fd;
+
   /* Neutrals & surfaces */
   --color-bg-app: #f3f7fb;
   --color-bg-card: #ffffff;
@@ -52,8 +57,23 @@
   --font-family-base: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
   --font-family-mono: 'JetBrains Mono', monospace;
 
+  /* Deliberate rhythm — shared by controls, cards and page layouts. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
   /* Layout */
   --content-max-width: 1280px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);

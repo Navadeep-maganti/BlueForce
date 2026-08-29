@@ -15,9 +15,7 @@ html {
 
 body {
   font-family: var(--font-family-base);
-  background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 26%),
-    linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
+  background: var(--color-bg-app);
   color: var(--color-text-primary);
   line-height: 1.5;
   min-height: 100vh;
@@ -39,6 +37,15 @@ button {
   border: none;
   background: none;
   outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.38);
+  outline-offset: 2px;
 }
 
 a {
@@ -73,4 +80,13 @@ img {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

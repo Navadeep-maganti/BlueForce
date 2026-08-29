@@ -138,7 +138,7 @@ export const JobDetailPage: React.FC<JobDetailPageProps> = ({ jobId, onNavigate 
         </div>
       </div>
 
-      {/* Main Grid: Description (8 cols) + AI Match & Plant Spec (4 cols) */}
+      {/* Main Grid: Description (8 cols) + Match & Plant Spec (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
@@ -204,7 +204,7 @@ export const JobDetailPage: React.FC<JobDetailPageProps> = ({ jobId, onNavigate 
 
         {/* Right Column (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* AI Match Card */}
+          {/* Match card */}
           {job.matchData && (
             <div className="kc-card p-5 bg-white border">
               <div className="flex items-center justify-between mb-3">
@@ -250,7 +250,7 @@ export const JobDetailPage: React.FC<JobDetailPageProps> = ({ jobId, onNavigate 
         </div>
       </div>
 
-      {/* Explainable AI Modal */}
+      {/* Explainable match modal */}
       {showMatchModal && job.matchData && (
         <MatchScoreModal
           matchData={job.matchData}

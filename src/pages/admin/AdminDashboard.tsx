@@ -26,12 +26,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const verifications = store.verifications;
   const reports = store.reports;
   const jobs = store.jobs;
+  const workers = store.candidates;
 
   const [activeTab, setActiveTab] = useState<'verifications' | 'reports' | 'jobs' | 'workers'>('verifications');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleVerifyDoc = (id: string, status: 'verified' | 'rejected') => {
-    store.verifyDocument(id, status);
+    const reason = status === 'rejected'
+      ? window.prompt('Add a reason for rejecting this document (optional):')
+      : undefined;
+    if (reason === null) return;
+    store.verifyDocument(id, status, reason?.trim() || undefined);
     setToastMessage(`Document marked as ${status.toUpperCase()}`);
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -56,7 +61,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-navy">
@@ -69,29 +74,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            store.resetDemoData();
-            setToastMessage('Demo dataset reset to pristine state.');
-          }}
-          className="btn btn-secondary btn-sm text-xs flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Reset Demo Seed State
-        </button>
       </div>
 
       {/* Top Admin KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="kc-card p-4 bg-white border">
-          <span className="text-xs font-bold text-muted uppercase block mb-1">Total Workers</span>
-          <div className="text-2xl font-black text-navy">12,480</div>
-          <span className="text-[10px] text-emerald-600 font-bold">98.2% Verified ID</span>
+          <span className="text-xs font-bold text-muted uppercase block mb-1">Worker profiles</span>
+          <div className="text-2xl font-black text-navy">{workers.length}</div>
+          <span className="text-[10px] text-slate-600 font-bold">Profiles available to review</span>
         </div>
 
         <div className="kc-card p-4 bg-white border">
-          <span className="text-xs font-bold text-muted uppercase block mb-1">Verified Employers</span>
-          <div className="text-2xl font-black text-navy">428</div>
-          <span className="text-[10px] text-emerald-600 font-bold">GSTIN Validated</span>
+          <span className="text-xs font-bold text-muted uppercase block mb-1">Live job postings</span>
+          <div className="text-2xl font-black text-navy">{jobs.length}</div>
+          <span className="text-[10px] text-slate-600 font-bold">Available for moderation review</span>
         </div>
 
         <div className="kc-card p-4 bg-white border">
@@ -138,6 +134,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           }`}
         >
           <Briefcase className="w-4 h-4" /> Job Moderation ({jobs.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('workers')}
+          className={`pb-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'workers'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-slate-500 hover:text-navy'
+          }`}
+        >
+          <Users className="w-4 h-4" /> Users ({workers.length})
         </button>
       </div>
 
@@ -281,6 +287,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                 <div className="flex items-center gap-2">
                   <span className="badge badge-verified text-[10px]">Active & Verified</span>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'workers' && (
+        <div className="kc-card bg-white border overflow-hidden">
+          <div className="p-4 border-b flex items-center justify-between bg-slate-50">
+            <h3 className="font-bold text-sm text-navy">Worker Profile Overview</h3>
+            <span className="text-xs text-muted">Current profiles available in the platform</span>
+          </div>
+          <div className="divide-y">
+            {workers.map((worker) => (
+              <div key={worker.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src={worker.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover border" />
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-xs sm:text-sm text-navy truncate">{worker.fullName}</h4>
+                    <p className="text-xs text-primary font-medium">{worker.primaryTrade} · {worker.location}</p>
+                  </div>
+                </div>
+                <span className="badge badge-verified text-[10px]">Trust score {worker.trustScore.total}/100</span>
               </div>
             ))}
           </div>

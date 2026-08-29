@@ -79,7 +79,7 @@ export const CandidateDiscoveryPage: React.FC<CandidateDiscoveryPageProps> = ({ 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-navy">AI Candidate Discovery</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-navy">Candidate Discovery</h1>
             <span className="badge badge-verified text-[11px]">
               ✓ Pre-Verified Trade Roster
             </span>

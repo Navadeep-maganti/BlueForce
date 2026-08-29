@@ -44,7 +44,7 @@ export const VoiceSearchModal: React.FC<VoiceSearchModalProps> = ({
   onClose,
   onSearch,
 }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [parsedRole, setParsedRole] = useState('');
@@ -115,7 +115,7 @@ export const VoiceSearchModal: React.FC<VoiceSearchModalProps> = ({
     if (SpeechRecognition) {
       try {
         const recognition = new SpeechRecognition();
-        recognition.lang = 'en-IN';
+        recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
@@ -205,7 +205,7 @@ export const VoiceSearchModal: React.FC<VoiceSearchModalProps> = ({
           <div className="p-4 bg-slate-50 border rounded-xl mb-4 animate-fadeIn">
             <div className="flex items-center gap-2 text-xs font-bold text-primary mb-1">
               <Sparkles className="w-3.5 h-3.5" />
-              {isProcessing ? t.voiceModal.analyzingVoice : 'AI Speech Extraction'}
+              {isProcessing ? t.voiceModal.analyzingVoice : 'Detected search details'}
             </div>
             <p className="text-sm font-medium text-slate-800 italic">
               "{transcript}"

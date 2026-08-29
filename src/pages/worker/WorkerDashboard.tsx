@@ -32,6 +32,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
   const store = useStore();
   const worker = store.workerProfile;
   const jobs = store.jobs;
+  const upcomingInterviews = store.applications.filter((application) => application.interview);
+  // Career recommendations are intentionally withheld until the API exposes verified insight data.
+  const careerInsight = null;
 
   const [selectedMatch, setSelectedMatch] = useState<{ match: JobMatchBreakdown; title: string; company: string } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -107,7 +110,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
               <div className="match-bar-fill" style={{ width: `${worker.profileStrengthPercent}%` }} />
             </div>
             <p className="text-xs text-slate-600 mb-3 leading-relaxed">
-              Your profile is in the top 5% of trade candidates in Andhra Pradesh.
+              Complete your profile, certifications and work proof to help employers assess your experience.
             </p>
 
             <div className="space-y-1.5 text-xs">
@@ -146,17 +149,15 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
         </div>
       </div>
 
-      {/* Career Gap Insights Banner */}
-      <div className="kc-card-navy p-4 sm:p-5 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-sm">
+      {/* Career insights appear only when a verified insight source is available. */}
+      {careerInsight && <div className="kc-card-navy p-4 sm:p-5 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-cyan-300 flex-shrink-0">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider bg-cyan-400 text-navy-950 px-1.5 py-0.2 rounded">
-                AI Career Insight
-              </span>
+              <span className="text-[9px] font-extrabold uppercase tracking-wider bg-cyan-400 text-navy-950 px-1.5 py-0.2 rounded">Career Insight</span>
             </div>
             <h3 className="text-xs sm:text-sm font-bold text-white mt-0.5">
               {t.workerDashboard.unlockJobs}
@@ -173,10 +174,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
         >
           Explore Skill Path
         </button>
-      </div>
+      </div>}
 
       {/* Upcoming Scheduled Interviews Section */}
-      {store.applications.filter((a) => a.currentStage === 'Interview' || a.interview).length > 0 && (
+      {upcomingInterviews.length > 0 && (
         <div className="kc-card p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-200">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -197,18 +198,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
           </div>
 
           <div className="space-y-2.5">
-            {store.applications
-              .filter((a) => a.currentStage === 'Interview' || a.interview)
-              .map((app) => {
-                const iv = app.interview || {
-                  date: '2026-09-02',
-                  time: '11:00 AM IST',
-                  type: 'In-person Trade Test',
-                  locationOrLink: 'ABC Industries Main Plant, Maintenance Bay 4, Autonagar, Vijayawada',
-                  instructions: 'Please bring original trade certificates and safety boots.',
-                  interviewerName: 'K. Satyanarayana (General Manager - Operations)',
-                  status: 'scheduled',
-                };
+            {upcomingInterviews.map((app) => {
+                const iv = app.interview;
+                if (!iv) return null;
                 return (
                   <div
                     key={app.id}
@@ -250,7 +242,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
         </div>
       )}
 
-      {/* AI Recommended Jobs Section */}
+      {/* Recommended jobs from the available job feed */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -324,7 +316,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
                     <span className="badge badge-neutral text-[9px] font-normal">{job.jobType}</span>
                   </div>
 
-                  {/* Explainable AI Match Pill */}
+                  {/* Explainable match information is shown only when the job feed provides it. */}
                   {job.matchData && (
                     <div
                       onClick={() =>
@@ -338,7 +330,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
                     >
                       <div className="flex items-center justify-between text-[11px] mb-0.5">
                         <span className="font-bold text-primary flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> {job.matchData.matchPercentage}% AI Fit
+                          <Sparkles className="w-3 h-3" /> {job.matchData.matchPercentage}% Match
                         </span>
                         <span className="text-[10px] text-primary underline font-semibold">Why?</span>
                       </div>
@@ -382,7 +374,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
         </div>
       </div>
 
-      {/* Explainable AI Modal */}
+      {/* Match explanation modal */}
       {selectedMatch && (
         <MatchScoreModal
           matchData={selectedMatch.match}

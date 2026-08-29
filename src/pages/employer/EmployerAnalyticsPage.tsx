@@ -21,7 +21,7 @@ export const EmployerAnalyticsPage: React.FC<EmployerAnalyticsPageProps> = ({ on
 
   const funnelData = [
     { stage: 'Applications Received', count: 248, percent: 100, color: 'bg-blue-600' },
-    { stage: 'AI Skill Verified', count: 184, percent: 74, color: 'bg-indigo-600' },
+    { stage: 'Skills verified', count: 184, percent: 74, color: 'bg-indigo-600' },
     { stage: 'Shortlisted by Foreman', count: 42, percent: 17, color: 'bg-cyan-600' },
     { stage: 'On-site Trade Test', count: 18, percent: 7.2, color: 'bg-amber-500' },
     { stage: 'Hired & ID Issued', count: 7, percent: 2.8, color: 'bg-emerald-500' },

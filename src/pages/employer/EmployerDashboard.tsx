@@ -214,7 +214,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({ onNavigate
 
       {/* Recruitment Pipeline Teaser & Candidate Stream (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Left Col: AI Ranked Candidate Stream (7 cols) */}
+        {/* Left Col: Candidate stream (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
           <div className="flex items-center justify-between">
             <div>

@@ -350,7 +350,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                     </div>
                   </div>
 
-                  {/* Explainable AI Match Pill */}
+                  {/* Explainable match information */}
                   {job.matchData && (
                     <div
                       onClick={() =>

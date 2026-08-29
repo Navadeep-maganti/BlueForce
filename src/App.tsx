@@ -3,6 +3,7 @@ import { I18nProvider } from './i18n/context';
 import { useStore } from './hooks/useStore';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
+import { WorkerMobileNav } from './components/layout/WorkerMobileNav';
 import { VoiceSearchModal } from './components/voice/VoiceSearchModal';
 import { NotificationDrawer } from './components/notifications/NotificationDrawer';
 
@@ -143,6 +144,15 @@ export const AppContent: React.FC = () => {
       <main className="main-content">
         {renderRoute()}
       </main>
+
+      {store.currentUser?.role === 'worker' && (
+        <WorkerMobileNav
+          currentPath={currentPath}
+          onNavigate={navigate}
+          onOpenNotifications={() => setNotifDrawerOpen(true)}
+          unreadCount={store.notifications.filter((notification) => !notification.isRead).length}
+        />
+      )}
 
       {/* Global Footer */}
       <Footer />

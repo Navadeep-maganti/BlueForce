@@ -22,28 +22,43 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   // Form State
-  const [title, setTitle] = useState('Senior Industrial Wireman & LT Panel Expert');
+  const [title, setTitle] = useState('');
   const [tradeCategory, setTradeCategory] = useState('Electrical');
-  const [description, setDescription] = useState(
-    'Responsible for high-voltage panel wiring, motor starter calibration, and preventative maintenance at our Autonagar plant.'
-  );
+  const [description, setDescription] = useState('');
   const [jobType, setJobType] = useState<'Full-time' | 'Contract' | 'Part-time' | 'Shift-based'>('Full-time');
   const [shift, setShift] = useState<'Day Shift' | 'Night Shift' | 'Rotational' | 'Flexible'>('Day Shift');
-  const [openings, setOpenings] = useState<number>(4);
+  const [openings, setOpenings] = useState<number>(1);
 
   // Step 2
-  const [skillsStr, setSkillsStr] = useState('Industrial Wiring, LT/HT Switchgear, Motor Maintenance, Plant Safety');
-  const [certsStr, setCertsStr] = useState('ITI Electrician Diploma, A-Grade Wireman License');
-  const [expYears, setExpYears] = useState<number>(4);
+  const [skillsStr, setSkillsStr] = useState('');
+  const [certsStr, setCertsStr] = useState('');
+  const [expYears, setExpYears] = useState<number>(0);
 
   // Step 3
-  const [salaryMin, setSalaryMin] = useState<number>(26000);
-  const [salaryMax, setSalaryMax] = useState<number>(34000);
-  const [city, setCity] = useState('Vijayawada');
-  const [workAddress, setWorkAddress] = useState('Phase-2, Autonagar Industrial Area, Vijayawada, AP');
-  const [benefitsStr, setBenefitsStr] = useState('PF & ESI, Subsidized Canteen, Overtime Pay (1.5x), Safety Boots & Kit');
-  const [joiningDate, setJoiningDate] = useState('Within 15 Days');
-  const [deadlineDate, setDeadlineDate] = useState('2026-04-30');
+  const [salaryMin, setSalaryMin] = useState<number>(0);
+  const [salaryMax, setSalaryMax] = useState<number>(0);
+  const [city, setCity] = useState('');
+  const [workAddress, setWorkAddress] = useState('');
+  const [benefitsStr, setBenefitsStr] = useState('');
+  const [joiningDate, setJoiningDate] = useState('');
+  const [deadlineDate, setDeadlineDate] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const handleNext = () => {
+    const error = currentStep === 1
+      ? (!title.trim() || !description.trim() ? 'Add a job title and a clear job description to continue.' : openings < 1 ? 'Enter at least one opening.' : null)
+      : currentStep === 2
+        ? (!skillsStr.trim() ? 'Add at least one required skill to continue.' : null)
+        : currentStep === 3
+          ? (!city.trim() || !workAddress.trim() ? 'Add the city and full work address to continue.' : salaryMin <= 0 || salaryMax < salaryMin ? 'Enter a valid monthly salary range.' : null)
+          : null;
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+    setValidationError(null);
+    setCurrentStep((step) => step + 1);
+  };
 
   const handlePublish = () => {
     store.postNewJob({
@@ -85,7 +100,7 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
       <div>
         <h1 className="text-xl sm:text-2xl font-black text-navy">Post a New Trade Opening</h1>
         <p className="text-xs text-muted">
-          Our AI parser will automatically index your requirements and match them against verified candidate profiles.
+          Describe the role clearly so verified candidates can understand requirements before they apply.
         </p>
       </div>
 
@@ -116,6 +131,8 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
 
       {/* Step Contents */}
       <div className="kc-card p-6 bg-white border">
+        {validationError && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" role="alert">{validationError}</div>}
+
         {/* STEP 1: Basic Details */}
         {currentStep === 1 && (
           <div className="space-y-4 animate-fadeIn">
@@ -217,7 +234,7 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
                 className="form-input text-xs"
               />
               <p className="text-[11px] text-muted">
-                Tip: Specific trade terms allow our AI algorithm to match candidates with 90%+ accuracy.
+                Use clear trade terms to help candidates assess whether the role is right for them.
               </p>
             </div>
 
@@ -323,11 +340,11 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
         {currentStep === 4 && (
           <div className="space-y-6 animate-fadeIn">
             <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-emerald-600" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               <div>
-                <h3 className="text-xs font-bold text-emerald-950">AI Parsing Ready</h3>
+                <h3 className="text-xs font-bold text-emerald-950">Ready to review</h3>
                 <p className="text-[11px] text-emerald-800">
-                  We found <strong>8 pre-screened candidates</strong> in your district matching these exact trade parameters.
+                  Check the job details below. You can still go back and make changes before publishing.
                 </p>
               </div>
             </div>
@@ -383,7 +400,7 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
 
           {currentStep < 4 ? (
             <button
-              onClick={() => setCurrentStep((prev) => prev + 1)}
+              onClick={handleNext}
               className="btn btn-primary btn-sm text-xs flex items-center gap-1"
             >
               Next Step <ArrowRight className="w-4 h-4" />
