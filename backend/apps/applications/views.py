@@ -443,3 +443,103 @@ class InterviewCompleteView(APIView):
             data=InterviewSerializer(interview).data,
             message="Interview marked as completed."
         )
+
+class ApplicationReviewWorkerView(APIView):
+    """
+    POST /api/v1/applications/<application_id>/review-worker/
+    Allows an employer to submit an official trade & reliability performance review
+    for a candidate who has been selected or hired.
+    """
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        from apps.workers.models import SupervisorReview
+        from apps.notifications.services import create_notification
+
+        employer = get_object_or_404(EmployerProfile, user=request.user)
+        application = get_object_or_404(Application, pk=pk, job__employer=employer)
+
+        # Rule 1: Application must be in Selected or Hired stage
+        eligible_stages = [
+            Application.StageChoices.SELECTED,
+            Application.StageChoices.HIRED,
+            'Selected',
+            'Hired'
+        ]
+        if application.current_stage not in eligible_stages:
+            return error_response(
+                message=f"Only selected or hired applicants can be reviewed. Current stage: '{application.current_stage}'.",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Rule 2: One review per employer-worker-application
+        if SupervisorReview.objects.filter(reviewer=employer, application=application).exists():
+            return error_response(
+                message="You have already submitted a performance review for this hire.",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Rule 3: Validate ratings
+        try:
+            rating = float(request.data.get('rating', 5.0))
+            skill_rating = float(request.data.get('skill_rating', rating))
+            reliability_rating = float(request.data.get('reliability_rating', rating))
+            if not (1.0 <= rating <= 5.0 and 1.0 <= skill_rating <= 5.0 and 1.0 <= reliability_rating <= 5.0):
+                raise ValueError("Rating values must be between 1.0 and 5.0.")
+        except (ValueError, TypeError) as e:
+            return error_response(
+                message=f"Invalid rating values: {str(e)}",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        comment = request.data.get('comment', '').strip()
+        if not comment:
+            return error_response(
+                message="Review comment is required.",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        review = SupervisorReview.objects.create(
+            reviewer=employer,
+            worker=application.worker,
+            application=application,
+            reviewer_name=employer.contact_person or employer.company_name,
+            reviewer_company=employer.company_name,
+            rating=rating,
+            skill_rating=skill_rating,
+            reliability_rating=reliability_rating,
+            comment=comment,
+            verified_hire=True
+        )
+
+        # Rule 4: Update Trust Score & recalculate
+        worker = application.worker
+        worker.trust_reviews_score = min(15, int(rating * 3))
+        worker.calculate_trust_score()
+
+        # Rule 5: Dispatch Notification to Worker
+        create_notification(
+            user=worker.user,
+            notification_type='GENERAL',
+            title="New Employer Review Received! ⭐",
+            message=f"{employer.company_name} published a {rating}★ supervisor review (+Trust Score recalculated).",
+            related_object_id=review.id,
+            action_url='/worker/profile'
+        )
+
+        return success_response(
+            data={
+                'review_id': review.id,
+                'worker_id': worker.id,
+                'rating': review.rating,
+                'skill_rating': review.skill_rating,
+                'reliability_rating': review.reliability_rating,
+                'comment': review.comment,
+                'reviewer_company': review.reviewer_company,
+                'date': review.date.strftime("%b %d, %Y"),
+                'worker_updated_trust_score': worker.trust_score_total,
+            },
+            message=f"Performance review submitted successfully. {worker.full_name}'s Trust Score updated.",
+            status_code=status.HTTP_201_CREATED
+        )

@@ -85,4 +85,20 @@ export const jobApi = {
     const res = await apiClient.delete(`/employer/jobs/${id}/`);
     return res.data;
   },
+
+  // 4. Saved Jobs (Phase 13)
+  async saveJob(id: number | string) {
+    const res = await apiClient.post(`/jobs/${id}/save/`);
+    return res.data;
+  },
+
+  async unsaveJob(id: number | string) {
+    const res = await apiClient.delete(`/jobs/${id}/save/`);
+    return res.data;
+  },
+
+  async getSavedJobs() {
+    const res = await apiClient.get('/workers/me/saved-jobs/');
+    return res.data;
+  },
 };

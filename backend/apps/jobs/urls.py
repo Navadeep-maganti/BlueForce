@@ -4,6 +4,7 @@ from .views import (
     EmployerJobDetailView,
     PublicJobListView,
     PublicJobDetailView,
+    SaveJobToggleView,
 )
 from apps.applications.views import ApplyJobView
 from apps.matching.views import WorkerRecommendedJobsView
@@ -11,6 +12,9 @@ from apps.matching.views import WorkerRecommendedJobsView
 urlpatterns = [
     # AI Recommended Jobs for Worker (Phase 11)
     path('recommended/', WorkerRecommendedJobsView.as_view(), name='jobs-recommended'),
+
+    # Bookmark / Save Job (Phase 13)
+    path('<int:pk>/save/', SaveJobToggleView.as_view(), name='job-save-toggle'),
 
     # Public Job Discovery & Detail
     path('', PublicJobListView.as_view(), name='public-job-list'),

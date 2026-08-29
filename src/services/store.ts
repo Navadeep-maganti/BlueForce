@@ -542,12 +542,20 @@ class Store {
       this.workerProfile.bookmarkedJobIds = [];
     }
     const idx = this.workerProfile.bookmarkedJobIds.indexOf(jobId);
-    if (idx >= 0) {
+    const isAdding = idx < 0;
+    if (!isAdding) {
       this.workerProfile.bookmarkedJobIds.splice(idx, 1);
     } else {
       this.workerProfile.bookmarkedJobIds.push(jobId);
     }
     this.saveToStorage();
+
+    const numericJobId = parseInt(jobId.replace(/\D/g, ''), 10) || 1;
+    if (isAdding) {
+      jobApi.saveJob(numericJobId).catch(() => {});
+    } else {
+      jobApi.unsaveJob(numericJobId).catch(() => {});
+    }
   }
 
   toggleBookmarkWorker(workerId: string) {
@@ -555,12 +563,20 @@ class Store {
       this.employerProfile.bookmarkedWorkerIds = [];
     }
     const idx = this.employerProfile.bookmarkedWorkerIds.indexOf(workerId);
-    if (idx >= 0) {
+    const isAdding = idx < 0;
+    if (!isAdding) {
       this.employerProfile.bookmarkedWorkerIds.splice(idx, 1);
     } else {
       this.employerProfile.bookmarkedWorkerIds.push(workerId);
     }
     this.saveToStorage();
+
+    const numericWorkerId = parseInt(workerId.replace(/\D/g, ''), 10) || 1;
+    if (isAdding) {
+      workerApi.saveCandidate(numericWorkerId).catch(() => {});
+    } else {
+      workerApi.unsaveCandidate(numericWorkerId).catch(() => {});
+    }
   }
 
   // Employer Actions

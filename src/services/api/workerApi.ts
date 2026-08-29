@@ -135,4 +135,43 @@ export const workerApi = {
     const res = await apiClient.delete(`/workers/me/proof-of-work/${id}/`);
     return res.data;
   },
+
+  // 7. Career Gap & Skill Recommendations (Phase 12)
+  async getCareerInsights(): Promise<{
+    success: boolean;
+    data: {
+      current_strengths: string[];
+      recommended_skills: Array<{
+        skill: string;
+        reason: string;
+        job_opportunities: number;
+      }>;
+    };
+    message: string;
+  }> {
+    const res = await apiClient.get('/workers/me/career-insights/');
+    return res.data;
+  },
+
+  // 8. Saved Candidates (Phase 13)
+  async saveCandidate(id: number | string) {
+    const res = await apiClient.post(`/workers/${id}/save/`);
+    return res.data;
+  },
+
+  async unsaveCandidate(id: number | string) {
+    const res = await apiClient.delete(`/workers/${id}/save/`);
+    return res.data;
+  },
+
+  async getSavedCandidates() {
+    const res = await apiClient.get('/employer/saved-candidates/');
+    return res.data;
+  },
+
+  // 9. Public Reviews (Phase 14)
+  async getWorkerReviews(workerId: number | string) {
+    const res = await apiClient.get(`/workers/${workerId}/reviews/`);
+    return res.data;
+  },
 };

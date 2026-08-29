@@ -10,6 +10,13 @@ export interface ScheduleInterviewPayload {
   interviewer_name: string;
 }
 
+export interface ReviewWorkerPayload {
+  rating: number;
+  skill_rating?: number;
+  reliability_rating?: number;
+  comment: string;
+}
+
 export const applicationApi = {
   // 1. Worker Apply for Job
   async applyForJob(jobId: number | string) {
@@ -51,6 +58,12 @@ export const applicationApi = {
   // 6. Application Detail
   async getApplicationDetail(applicationId: number | string) {
     const res = await apiClient.get(`/applications/${applicationId}/`);
+    return res.data;
+  },
+
+  // 7. Submit Performance Review for Hired Worker (Phase 14)
+  async reviewWorker(applicationId: number | string, payload: ReviewWorkerPayload) {
+    const res = await apiClient.post(`/applications/${applicationId}/review-worker/`, payload);
     return res.data;
   },
 };

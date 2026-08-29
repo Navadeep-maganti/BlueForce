@@ -197,10 +197,26 @@ class ProofOfWork(models.Model):
         return f"Proof: {self.title} by {self.worker.full_name}"
 
 class SupervisorReview(models.Model):
+    reviewer = models.ForeignKey(
+        'employers.EmployerProfile',
+        on_delete=models.SET_NULL,
+        related_name='submitted_reviews',
+        blank=True,
+        null=True
+    )
     worker = models.ForeignKey(WorkerProfile, on_delete=models.CASCADE, related_name='reviews')
-    reviewer_name = models.CharField(max_length=200)
-    reviewer_company = models.CharField(max_length=255)
+    application = models.ForeignKey(
+        'applications.Application',
+        on_delete=models.SET_NULL,
+        related_name='reviews',
+        blank=True,
+        null=True
+    )
+    reviewer_name = models.CharField(max_length=200, default='Plant Supervisor')
+    reviewer_company = models.CharField(max_length=255, default='Industrial Employer')
     rating = models.FloatField(default=5.0)
+    skill_rating = models.FloatField(default=5.0)
+    reliability_rating = models.FloatField(default=5.0)
     comment = models.TextField()
     date = models.DateField(auto_now_add=True)
     verified_hire = models.BooleanField(default=True, db_index=True)

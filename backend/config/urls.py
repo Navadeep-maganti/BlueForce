@@ -21,11 +21,13 @@ from apps.verification.views import (
 from apps.analytics.views import (
     WorkerDashboardAggregationView,
     EmployerDashboardAggregationView,
+    EmployerRecruitmentAnalyticsView,
 )
 from apps.matching.views import (
     WorkerRecommendedJobsView,
     EmployerRecommendedCandidatesView,
 )
+from apps.employers.views import EmployerSavedCandidatesListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,6 +42,8 @@ urlpatterns = [
     path('api/v1/jobs/', include('apps.jobs.urls')),
     path('api/v1/employer/jobs/', EmployerJobListCreateView.as_view(), name='employer-jobs-list-create'),
     path('api/v1/employer/jobs/<int:pk>/', EmployerJobDetailView.as_view(), name='employer-jobs-detail'),
+    path('api/v1/employer/saved-candidates/', EmployerSavedCandidatesListView.as_view(), name='employer-saved-candidates-root'),
+    path('api/v1/employer/analytics/', EmployerRecruitmentAnalyticsView.as_view(), name='employer-recruitment-analytics-root'),
 
     # Explainable Matching Engine (Phase 11)
     path('api/v1/jobs/recommended/', WorkerRecommendedJobsView.as_view(), name='root-jobs-recommended'),
@@ -61,7 +65,7 @@ urlpatterns = [
     path('api/v1/admin/verifications/<int:pk>/approve/', AdminVerificationApproveView.as_view(), name='admin-verifications-approve'),
     path('api/v1/admin/verifications/<int:pk>/reject/', AdminVerificationRejectView.as_view(), name='admin-verifications-reject'),
 
-    # Dashboard Aggregation APIs (Phase 10)
+    # Dashboard Aggregation APIs (Phase 10 & 15)
     path('api/v1/dashboard/worker/', WorkerDashboardAggregationView.as_view(), name='dashboard-worker-root'),
     path('api/v1/dashboard/employer/', EmployerDashboardAggregationView.as_view(), name='dashboard-employer-root'),
     path('api/v1/dashboard/', include('apps.analytics.urls')),

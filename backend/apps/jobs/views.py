@@ -194,3 +194,36 @@ class PublicJobDetailView(APIView):
             data=serializer.data,
             message="Job details retrieved successfully."
         )
+
+class SaveJobToggleView(APIView):
+    """
+    POST /api/v1/jobs/<id>/save/
+    DELETE /api/v1/jobs/<id>/save/
+    Allows authenticated workers to bookmark or unbookmark a job opening.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from apps.workers.models import WorkerProfile
+        from .models import SavedJob
+        worker = get_object_or_404(WorkerProfile, user=request.user)
+        job = get_object_or_404(Job, pk=pk)
+
+        saved_job, created = SavedJob.objects.get_or_create(worker=worker, job=job)
+        return success_response(
+            data={'job_id': job.id, 'is_saved': True},
+            message="Job saved to your bookmarks.",
+            status_code=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )
+
+    def delete(self, request, pk):
+        from apps.workers.models import WorkerProfile
+        from .models import SavedJob
+        worker = get_object_or_404(WorkerProfile, user=request.user)
+        job = get_object_or_404(Job, pk=pk)
+
+        deleted_count, _ = SavedJob.objects.filter(worker=worker, job=job).delete()
+        return success_response(
+            data={'job_id': job.id, 'is_saved': False},
+            message="Job removed from your bookmarks."
+        )

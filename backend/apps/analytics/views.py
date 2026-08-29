@@ -304,3 +304,94 @@ class EmployerDashboardAggregationView(APIView):
             data=payload,
             message="Aggregated employer dashboard retrieved successfully."
         )
+
+class EmployerRecruitmentAnalyticsView(APIView):
+    """
+    GET /api/v1/employer/analytics/
+    Deep recruitment intelligence using actual platform hiring data:
+    - Applications per job & average per active job
+    - Full pipeline conversion funnel (Applied -> Screening -> Shortlisted -> Interview -> Selected -> Hired)
+    - Calculated conversion ratios (Shortlist Rate, Interview Rate, Hire Rate)
+    - Trade-specific candidate volume distribution
+    """
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    def get(self, request):
+        employer = get_object_or_404(EmployerProfile, user=request.user)
+
+        # 1. Employer Jobs & Active Counts
+        employer_jobs = Job.objects.filter(employer=employer)
+        active_jobs = employer_jobs.filter(status=Job.StatusChoices.ACTIVE)
+        active_jobs_count = active_jobs.count()
+
+        # 2. Applications
+        apps_qs = Application.objects.filter(job__employer=employer).select_related('job', 'worker')
+        total_applications = apps_qs.count()
+
+        # 3. Pipeline Funnel (Actual Cumulative Volume)
+        hired = apps_qs.filter(current_stage__in=['Hired', 'HIRED']).count()
+        selected = apps_qs.filter(current_stage__in=['Selected', 'SELECTED', 'Hired', 'HIRED']).count()
+        interview = apps_qs.filter(current_stage__in=['Interview', 'INTERVIEW', 'Selected', 'SELECTED', 'Hired', 'HIRED']).count()
+        shortlisted = apps_qs.filter(current_stage__in=['Shortlisted', 'SHORTLISTED', 'Interview', 'INTERVIEW', 'Selected', 'SELECTED', 'Hired', 'HIRED']).count()
+        screening = apps_qs.filter(current_stage__in=['Screening', 'SCREENING', 'Shortlisted', 'SHORTLISTED', 'Interview', 'INTERVIEW', 'Selected', 'SELECTED', 'Hired', 'HIRED']).count()
+        applied = total_applications
+
+        pipeline = {
+            'applied': applied,
+            'screening': screening,
+            'shortlisted': shortlisted,
+            'interview': interview,
+            'selected': selected,
+            'hired': hired,
+        }
+
+        # 4. Conversion Rates
+        shortlist_rate = round((shortlisted / max(1, applied)) * 100, 1) if applied > 0 else 0.0
+        interview_rate = round((interview / max(1, applied)) * 100, 1) if applied > 0 else 0.0
+        hire_rate = round((hired / max(1, applied)) * 100, 1) if applied > 0 else 0.0
+
+        conversion_rates = {
+            'shortlist_rate': shortlist_rate,
+            'interview_rate': interview_rate,
+            'hire_rate': hire_rate,
+        }
+
+        # 5. Applications Per Job
+        applications_per_job = []
+        for job in employer_jobs:
+            job_apps = apps_qs.filter(job=job)
+            job_hired = job_apps.filter(current_stage__in=[Application.StageChoices.HIRED, 'Hired']).count()
+            applications_per_job.append({
+                'job_id': job.id,
+                'title': job.title,
+                'trade_category': job.trade_category,
+                'openings': job.openings,
+                'status': job.status,
+                'applicants_count': job_apps.count(),
+                'hired_count': job_hired,
+                'fill_rate_percent': round((job_hired / max(1, job.openings)) * 100, 1),
+            })
+
+        avg_apps_per_active_job = round(total_applications / max(1, active_jobs_count), 1) if active_jobs_count > 0 else 0.0
+
+        # 6. Trade Volume Breakdown
+        trade_volume = {}
+        for job in employer_jobs:
+            trade = job.trade_category
+            count = apps_qs.filter(job=job).count()
+            trade_volume[trade] = trade_volume.get(trade, 0) + count
+
+        top_recruitment_trades = [{'trade': k, 'applicants': v} for k, v in trade_volume.items()]
+
+        return success_response(
+            data={
+                'total_applications': total_applications,
+                'active_jobs_count': active_jobs_count,
+                'average_applications_per_active_job': avg_apps_per_active_job,
+                'pipeline': pipeline,
+                'conversion_rates': conversion_rates,
+                'applications_per_job': applications_per_job,
+                'top_recruitment_trades': top_recruitment_trades,
+            },
+            message="Recruitment analytics calculated successfully."
+        )

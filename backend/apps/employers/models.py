@@ -37,3 +37,28 @@ class EmployerProfile(models.Model):
 
     def __str__(self):
         return f"{self.company_name} ({self.city})"
+
+class SavedCandidate(models.Model):
+    """
+    Bookmark relationship between an employer and a saved technician candidate.
+    """
+    employer = models.ForeignKey(
+        EmployerProfile,
+        on_delete=models.CASCADE,
+        related_name='saved_candidates'
+    )
+    worker = models.ForeignKey(
+        'workers.WorkerProfile',
+        on_delete=models.CASCADE,
+        related_name='saved_by_employers'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['employer', 'worker'], name='unique_employer_saved_worker')
+        ]
+
+    def __str__(self):
+        return f"{self.employer.company_name} saved candidate {self.worker.full_name}"

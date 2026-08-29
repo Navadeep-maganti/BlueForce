@@ -10,6 +10,7 @@ from .views import (
     InterviewDetailView,
     InterviewCancelView,
     InterviewCompleteView,
+    ApplicationReviewWorkerView,
 )
 
 urlpatterns = [
@@ -20,10 +21,11 @@ urlpatterns = [
     # Employer pipeline
     path('employer/', EmployerApplicationListView.as_view(), name='employer-applications'),
 
-    # Application details, stage updates & interview scheduling
+    # Application details, stage updates, review & interview scheduling
     path('<int:pk>/', ApplicationDetailView.as_view(), name='application-detail'),
     path('<int:pk>/stage/', ApplicationStageUpdateView.as_view(), name='application-stage-update'),
     path('<int:pk>/schedule-interview/', ScheduleInterviewView.as_view(), name='application-schedule-interview'),
+    path('<int:pk>/review-worker/', ApplicationReviewWorkerView.as_view(), name='application-review-worker'),
 
     # Interviews Management System (Phase 5)
     path('interviews/', InterviewListView.as_view(), name='interviews-list'),

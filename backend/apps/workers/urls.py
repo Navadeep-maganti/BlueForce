@@ -10,6 +10,10 @@ from .views import (
     WorkerProofOfWorkListCreateView,
     WorkerProofOfWorkDetailView,
     PublicWorkerProfileView,
+    WorkerCareerInsightsView,
+    WorkerSavedJobsListView,
+    SaveCandidateToggleView,
+    WorkerPublicReviewsListView,
 )
 
 urlpatterns = [
@@ -18,6 +22,8 @@ urlpatterns = [
 
     # Aggregated & Update Me
     path('me/', WorkerProfileMeView.as_view(), name='worker-me'),
+    path('me/career-insights/', WorkerCareerInsightsView.as_view(), name='worker-career-insights'),
+    path('me/saved-jobs/', WorkerSavedJobsListView.as_view(), name='worker-saved-jobs'),
 
     # Skills
     path('me/skills/', WorkerSkillListCreateView.as_view(), name='worker-skills-list-create'),
@@ -31,6 +37,10 @@ urlpatterns = [
     path('me/proof-of-work/', WorkerProofOfWorkListCreateView.as_view(), name='worker-pow-list-create'),
     path('me/proof-of-work/<int:pk>/', WorkerProofOfWorkDetailView.as_view(), name='worker-pow-detail'),
 
-    # Public Profile for Employers
+    # Save Candidate Toggle (Phase 13)
+    path('<int:pk>/save/', SaveCandidateToggleView.as_view(), name='worker-save-candidate-toggle'),
+
+    # Public Profile & Reviews (Phase 14)
     path('<int:pk>/', PublicWorkerProfileView.as_view(), name='worker-public-detail'),
+    path('<int:pk>/reviews/', WorkerPublicReviewsListView.as_view(), name='worker-public-reviews'),
 ]
