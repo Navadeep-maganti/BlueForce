@@ -7,6 +7,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from apps.workers.views import SkillTaxonomyListView
 from apps.jobs.views import EmployerJobListCreateView, EmployerJobDetailView
+from apps.applications.views import (
+    InterviewListView,
+    InterviewDetailView,
+    InterviewCancelView,
+    InterviewCompleteView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -22,7 +28,15 @@ urlpatterns = [
     path('api/v1/employer/jobs/', EmployerJobListCreateView.as_view(), name='employer-jobs-list-create'),
     path('api/v1/employer/jobs/<int:pk>/', EmployerJobDetailView.as_view(), name='employer-jobs-detail'),
 
+    # Applications System
     path('api/v1/applications/', include('apps.applications.urls')),
+
+    # Interviews Management System (Phase 5)
+    path('api/v1/interviews/', InterviewListView.as_view(), name='interviews-root-list'),
+    path('api/v1/interviews/<int:pk>/', InterviewDetailView.as_view(), name='interviews-root-detail'),
+    path('api/v1/interviews/<int:pk>/cancel/', InterviewCancelView.as_view(), name='interviews-root-cancel'),
+    path('api/v1/interviews/<int:pk>/complete/', InterviewCompleteView.as_view(), name='interviews-root-complete'),
+
     path('api/v1/verification/', include('apps.verification.urls')),
     path('api/v1/matching/', include('apps.matching.urls')),
     path('api/v1/reports/', include('apps.reports.urls')),

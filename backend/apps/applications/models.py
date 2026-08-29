@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 class Application(models.Model):
     class StageChoices(models.TextChoices):
@@ -53,39 +54,52 @@ class ApplicationTimelineEvent(models.Model):
 
 class Interview(models.Model):
     class InterviewTypeChoices(models.TextChoices):
-        TRADE_TEST = 'In-person Trade Test', 'In-person Trade Test (Plant Workshop)'
-        VIDEO_CALL = 'Video Call', 'Video Technical Screening'
-        PHONE = 'Phone Screening', 'Phone Screening'
-        PLANT_VISIT = 'Plant Visit', 'Plant Walkthrough'
+        TRADE_TEST = 'TRADE_TEST', 'In-person Trade Test'
+        VIDEO_CALL = 'VIDEO_CALL', 'Video Technical Screening'
+        IN_PERSON = 'IN_PERSON', 'In-person Interview'
+        PLANT_VISIT = 'PLANT_VISIT', 'Plant Walkthrough'
+        PHONE = 'PHONE', 'Phone Screening'
 
     class StatusChoices(models.TextChoices):
-        SCHEDULED = 'scheduled', 'Scheduled'
-        COMPLETED = 'completed', 'Completed'
-        RESCHEDULED = 'rescheduled', 'Rescheduled'
-        CANCELLED = 'cancelled', 'Cancelled'
+        SCHEDULED = 'SCHEDULED', 'Scheduled'
+        COMPLETED = 'COMPLETED', 'Completed'
+        CANCELLED = 'CANCELLED', 'Cancelled'
+        NO_SHOW = 'NO_SHOW', 'No Show'
 
     application = models.OneToOneField(Application, on_delete=models.CASCADE, related_name='interview')
-    date = models.DateField(db_index=True)
+    scheduled_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    date = models.DateField(null=True, blank=True, db_index=True)
     time = models.CharField(max_length=50, default='10:00 AM IST')
     interview_type = models.CharField(
         max_length=50,
         choices=InterviewTypeChoices.choices,
-        default=InterviewTypeChoices.TRADE_TEST
+        default=InterviewTypeChoices.TRADE_TEST,
+        db_index=True
     )
-    location_or_link = models.CharField(max_length=300, default='ABC Industries Main Plant, Maintenance Bay 4, Autonagar, Vijayawada')
-    instructions = models.TextField(default='Please bring original trade certificates and safety boots.')
-    interviewer_name = models.CharField(max_length=200, default='K. Satyanarayana (General Manager - Operations)')
+    location = models.CharField(max_length=300, default='Plant Maintenance Workshop, Vijayawada')
+    meeting_link = models.CharField(max_length=500, blank=True, null=True)
+    location_or_link = models.CharField(max_length=500, blank=True, null=True)
+    instructions = models.TextField(default='Please bring original trade certificates and government ID.')
+    interviewer_name = models.CharField(max_length=200, default='Plant Operations Team')
     status = models.CharField(
         max_length=20,
         choices=StatusChoices.choices,
         default=StatusChoices.SCHEDULED,
         db_index=True
     )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='scheduled_interviews'
+    )
+    feedback = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['date', 'time']
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"Interview for {self.application.worker.full_name} on {self.date}"
+        return f"Interview for {self.application.worker.full_name} ({self.status})"

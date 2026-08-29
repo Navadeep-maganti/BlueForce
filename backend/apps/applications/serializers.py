@@ -13,20 +13,47 @@ class ApplicationTimelineEventSerializer(serializers.ModelSerializer):
         return obj.timestamp.strftime("%b %d, %H:%M")
 
 class InterviewSerializer(serializers.ModelSerializer):
+    job_title = serializers.CharField(source='application.job.title', read_only=True)
+    company_name = serializers.CharField(source='application.job.employer.company_name', read_only=True)
+    company_logo_url = serializers.CharField(source='application.job.employer.logo_url', read_only=True)
+    worker_name = serializers.CharField(source='application.worker.full_name', read_only=True)
+    worker_trade = serializers.CharField(source='application.worker.primary_trade', read_only=True)
+    worker_avatar_url = serializers.CharField(source='application.worker.user.avatar_url', read_only=True)
+    worker_trust_score = serializers.IntegerField(source='application.worker.trust_score_total', read_only=True)
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+
     class Meta:
         model = Interview
         fields = [
             'id',
+            'application',
+            'job_title',
+            'company_name',
+            'company_logo_url',
+            'worker_name',
+            'worker_trade',
+            'worker_avatar_url',
+            'worker_trust_score',
+            'scheduled_at',
             'date',
             'time',
             'interview_type',
+            'location',
+            'meeting_link',
             'location_or_link',
             'instructions',
             'interviewer_name',
             'status',
+            'created_by',
+            'created_by_name',
+            'feedback',
             'created_at',
+            'updated_at',
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = [
+            'id', 'application', 'job_title', 'company_name',
+            'worker_name', 'created_by', 'created_at', 'updated_at'
+        ]
 
 class ApplicationSerializer(serializers.ModelSerializer):
     job_title = serializers.CharField(source='job.title', read_only=True)
@@ -90,9 +117,9 @@ class ApplicationStageUpdateSerializer(serializers.Serializer):
         'Shortlisted': ['Interview', 'Rejected', 'Withdrawn'],
         'Interview': ['Selected', 'Rejected', 'Withdrawn'],
         'Selected': ['Hired', 'Rejected', 'Withdrawn'],
-        'Hired': [], # Terminal
-        'Rejected': [], # Terminal
-        'Withdrawn': [], # Terminal
+        'Hired': [],
+        'Rejected': [],
+        'Withdrawn': [],
     }
 
     def validate(self, attrs):
@@ -114,10 +141,35 @@ class ScheduleInterviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interview
         fields = [
+            'scheduled_at',
             'date',
             'time',
             'interview_type',
+            'location',
+            'meeting_link',
             'location_or_link',
             'instructions',
             'interviewer_name',
         ]
+
+class InterviewUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interview
+        fields = [
+            'scheduled_at',
+            'date',
+            'time',
+            'interview_type',
+            'location',
+            'meeting_link',
+            'location_or_link',
+            'instructions',
+            'interviewer_name',
+            'status',
+            'feedback',
+        ]
+
+class InterviewCompleteSerializer(serializers.Serializer):
+    feedback = serializers.CharField(required=False, allow_blank=True)
+    rating = serializers.FloatField(required=False, min_value=1.0, max_value=5.0)
+    move_to_selected = serializers.BooleanField(default=True)

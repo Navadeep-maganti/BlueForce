@@ -140,6 +140,78 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({ onNavigate
         </div>
       </div>
 
+      {/* Scheduled Plant Interviews & Trade Tests (Phase 5) */}
+      {applications.filter((a) => a.currentStage === 'Interview' || a.interview).length > 0 && (
+        <div className="kc-card p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50/40 border border-blue-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-black text-navy">📅 Scheduled Plant Interviews & Trade Tests</h3>
+                <p className="text-[10px] text-slate-500">Upcoming candidate assessments at your plant facilities</p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('/employer/pipeline')}
+              className="text-primary text-xs font-bold hover:underline"
+            >
+              Manage in Pipeline →
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {applications
+              .filter((a) => a.currentStage === 'Interview' || a.interview)
+              .map((app) => {
+                const iv = app.interview || {
+                  date: '2026-09-02',
+                  time: '11:00 AM IST',
+                  type: 'In-person Trade Test',
+                  locationOrLink: 'Plant Maintenance Bay 4, Autonagar, Vijayawada',
+                  instructions: 'Bring trade certificate copies and safety boots.',
+                  interviewerName: 'K. Satyanarayana (General Manager - Operations)',
+                  status: 'scheduled',
+                };
+                return (
+                  <div key={app.id} className="p-3.5 rounded-xl bg-white border border-blue-100 shadow-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={app.workerAvatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200'}
+                          alt={app.workerName}
+                          className="w-8 h-8 rounded-lg object-cover border"
+                        />
+                        <div>
+                          <div className="text-xs font-bold text-navy">{app.workerName}</div>
+                          <div className="text-[10px] text-primary font-semibold">{app.workerTrade}</div>
+                        </div>
+                      </div>
+                      <span className="badge badge-success text-[9px] uppercase font-extrabold py-0.5">
+                        {iv.status || 'Scheduled'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-blue-900 flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-blue-600" /> {iv.date} at {iv.time}
+                        </span>
+                        <span className="badge badge-neutral text-[9px]">{iv.type || 'Trade Test'}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <span className="truncate">{iv.locationOrLink || 'Plant Workshop'}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
       {/* Recruitment Pipeline Teaser & Candidate Stream (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Col: AI Ranked Candidate Stream (7 cols) */}

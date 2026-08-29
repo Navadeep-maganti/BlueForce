@@ -230,6 +230,48 @@ class WorkerProfileAggregatedSerializer(serializers.ModelSerializer):
             },
         }
 
+class CandidateDiscoveryCardSerializer(serializers.ModelSerializer):
+    """
+    Compact card serializer for employer candidate search and talent discovery.
+    """
+    avatar_url = serializers.CharField(source='user.avatar_url', read_only=True)
+    is_verified = serializers.BooleanField(source='user.is_verified', read_only=True)
+    top_skills = serializers.SerializerMethodField()
+    proof_of_work_count = serializers.SerializerMethodField()
+    verified_certs_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkerProfile
+        fields = [
+            'id',
+            'full_name',
+            'primary_trade',
+            'tagline',
+            'location',
+            'city',
+            'state',
+            'years_of_experience',
+            'availability',
+            'trust_score_total',
+            'avatar_url',
+            'is_verified',
+            'top_skills',
+            'proof_of_work_count',
+            'verified_certs_count',
+            'expected_salary_min',
+            'expected_salary_max',
+            'created_at',
+        ]
+
+    def get_top_skills(self, obj):
+        return [s.skill_name for s in obj.skills.all()[:4]]
+
+    def get_proof_of_work_count(self, obj):
+        return obj.proof_of_works.count()
+
+    def get_verified_certs_count(self, obj):
+        return obj.certifications.filter(verification_status='verified').count()
+
 class PublicWorkerProfileSerializer(serializers.ModelSerializer):
     """
     Sanitized public profile for employers:
@@ -238,9 +280,11 @@ class PublicWorkerProfileSerializer(serializers.ModelSerializer):
     skills = WorkerSkillSerializer(many=True, read_only=True)
     certifications = serializers.SerializerMethodField()
     proof_of_work = ProofOfWorkSerializer(source='proof_of_works', many=True, read_only=True)
+    experiences = WorkExperienceSerializer(many=True, read_only=True)
     reviews = SupervisorReviewSerializer(many=True, read_only=True)
     avatar_url = serializers.CharField(source='user.avatar_url', read_only=True)
-    trust_score_total = serializers.IntegerField(read_only=True)
+    is_verified = serializers.BooleanField(source='user.is_verified', read_only=True)
+    trust_score = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkerProfile
@@ -250,6 +294,7 @@ class PublicWorkerProfileSerializer(serializers.ModelSerializer):
             'primary_trade',
             'tagline',
             'bio',
+            'location',
             'city',
             'state',
             'preferred_radius_km',
@@ -259,16 +304,18 @@ class PublicWorkerProfileSerializer(serializers.ModelSerializer):
             'years_of_experience',
             'education',
             'languages',
-            'trust_score_total',
             'avatar_url',
+            'is_verified',
+            'trust_score_total',
+            'trust_score',
             'skills',
             'certifications',
             'proof_of_work',
+            'experiences',
             'reviews',
         ]
 
     def get_certifications(self, obj):
-        # Only expose verified certificates without direct sensitive PDF URLs
         return [
             {
                 'id': c.id,
@@ -279,3 +326,16 @@ class PublicWorkerProfileSerializer(serializers.ModelSerializer):
             }
             for c in obj.certifications.filter(verification_status='verified')
         ]
+
+    def get_trust_score(self, obj):
+        return {
+            'total': obj.trust_score_total,
+            'breakdown': {
+                'identity': { 'score': obj.trust_identity_score, 'max': 20, 'verified': obj.user.is_verified, 'label': 'Aadhaar Biometric eKYC' },
+                'certifications': { 'score': obj.trust_certifications_score, 'max': 20, 'verified_count': obj.certifications.filter(verification_status='verified').count() },
+                'skills': { 'score': obj.trust_skills_score, 'max': 20, 'tested_count': obj.skills.filter(is_verified=True).count() },
+                'experience': { 'score': obj.trust_experience_score, 'max': 15, 'verified_years': obj.years_of_experience },
+                'employer_reviews': { 'score': obj.trust_reviews_score, 'max': 15, 'review_count': obj.reviews.count() },
+                'completed_jobs': { 'score': obj.trust_completed_jobs_score, 'max': 10, 'completed_count': obj.proof_of_works.count() },
+            }
+        }

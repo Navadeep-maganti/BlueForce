@@ -175,6 +175,81 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
         </button>
       </div>
 
+      {/* Upcoming Scheduled Interviews Section */}
+      {store.applications.filter((a) => a.currentStage === 'Interview' || a.interview).length > 0 && (
+        <div className="kc-card p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-black text-navy">📅 Upcoming Scheduled Interviews & Trade Tests</h3>
+                <p className="text-[10px] text-slate-500">Confirmed interview appointments with employer plant supervisors</p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('/worker/applications')}
+              className="text-primary text-xs font-bold hover:underline"
+            >
+              View All Applications
+            </button>
+          </div>
+
+          <div className="space-y-2.5">
+            {store.applications
+              .filter((a) => a.currentStage === 'Interview' || a.interview)
+              .map((app) => {
+                const iv = app.interview || {
+                  date: '2026-09-02',
+                  time: '11:00 AM IST',
+                  type: 'In-person Trade Test',
+                  locationOrLink: 'ABC Industries Main Plant, Maintenance Bay 4, Autonagar, Vijayawada',
+                  instructions: 'Please bring original trade certificates and safety boots.',
+                  interviewerName: 'K. Satyanarayana (General Manager - Operations)',
+                  status: 'scheduled',
+                };
+                return (
+                  <div
+                    key={app.id}
+                    className="p-3 rounded-xl bg-white border border-blue-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="badge badge-success text-[10px] uppercase font-bold py-0.5">
+                          {iv.type || 'Trade Test'}
+                        </span>
+                        <span className="text-xs font-black text-navy">{app.jobTitle}</span>
+                        <span className="text-[11px] text-muted">• {app.companyName}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600">
+                        <span className="flex items-center gap-1 font-semibold text-blue-900">
+                          <Clock className="w-3.5 h-3.5 text-blue-600" /> {iv.date} at {iv.time}
+                        </span>
+                        <span className="flex items-center gap-1 text-slate-600">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400" /> {iv.locationOrLink || 'Plant Workshop'}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-amber-800 bg-amber-50/80 px-2 py-1 rounded border border-amber-200/60 inline-block mt-1">
+                        <strong>Instructions:</strong> {iv.instructions}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end md:self-auto">
+                      <button
+                        onClick={() => onNavigate('/worker/applications')}
+                        className="btn btn-outline-primary btn-sm text-[11px]"
+                      >
+                        Track Status
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
       {/* AI Recommended Jobs Section */}
       <div>
         <div className="flex items-center justify-between mb-3">

@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    WorkerDiscoveryListView,
     WorkerProfileMeView,
     SkillTaxonomyListView,
     WorkerSkillListCreateView,
@@ -12,6 +13,9 @@ from .views import (
 )
 
 urlpatterns = [
+    # Candidate Discovery for Employers (Phase 6)
+    path('', WorkerDiscoveryListView.as_view(), name='worker-discovery-list'),
+
     # Aggregated & Update Me
     path('me/', WorkerProfileMeView.as_view(), name='worker-me'),
 

@@ -27,8 +27,39 @@ export interface CertificationPayload {
   document_url?: string;
 }
 
+export interface WorkerFilterParams {
+  search?: string;
+  skill?: string;
+  location?: string;
+  city?: string;
+  experience?: number;
+  availability?: string;
+  minimum_trust_score?: number;
+  verified_only?: boolean;
+  ordering?: string;
+  page?: number;
+}
+
 export const workerApi = {
-  // 1. Aggregated Profile
+  // 1. Candidate Discovery for Employers (Phase 6)
+  async discoverWorkers(params: WorkerFilterParams = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+        query.append(key, String(value));
+      }
+    });
+    const res = await apiClient.get(`/workers/?${query.toString()}`);
+    return res.data;
+  },
+
+  // 2. Public Sanitized Worker Profile for Employers
+  async getPublicProfile(id: number | string) {
+    const res = await apiClient.get(`/workers/${id}/`);
+    return res.data;
+  },
+
+  // 3. Worker's Own Aggregated Profile
   async getMyProfile() {
     const res = await apiClient.get('/workers/me/');
     return res.data;
@@ -39,7 +70,7 @@ export const workerApi = {
     return res.data;
   },
 
-  // 2. Skills
+  // 4. Skills
   async getTaxonomySkills(category?: string, search?: string) {
     const params = new URLSearchParams();
     if (category) params.append('category', category);
@@ -68,7 +99,7 @@ export const workerApi = {
     return res.data;
   },
 
-  // 3. Certifications
+  // 5. Certifications
   async getMyCertifications() {
     const res = await apiClient.get('/workers/me/certifications/');
     return res.data;
@@ -84,7 +115,7 @@ export const workerApi = {
     return res.data;
   },
 
-  // 4. Proof of Work
+  // 6. Proof of Work
   async getMyProofOfWork() {
     const res = await apiClient.get('/workers/me/proof-of-work/');
     return res.data;
@@ -102,12 +133,6 @@ export const workerApi = {
 
   async deleteProofOfWork(id: number | string) {
     const res = await apiClient.delete(`/workers/me/proof-of-work/${id}/`);
-    return res.data;
-  },
-
-  // 5. Public Profile for Employers
-  async getPublicProfile(id: number | string) {
-    const res = await apiClient.get(`/workers/${id}/`);
     return res.data;
   },
 };

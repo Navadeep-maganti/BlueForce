@@ -6,6 +6,10 @@ from .views import (
     ApplicationDetailView,
     ApplicationStageUpdateView,
     ScheduleInterviewView,
+    InterviewListView,
+    InterviewDetailView,
+    InterviewCancelView,
+    InterviewCompleteView,
 )
 
 urlpatterns = [
@@ -20,4 +24,10 @@ urlpatterns = [
     path('<int:pk>/', ApplicationDetailView.as_view(), name='application-detail'),
     path('<int:pk>/stage/', ApplicationStageUpdateView.as_view(), name='application-stage-update'),
     path('<int:pk>/schedule-interview/', ScheduleInterviewView.as_view(), name='application-schedule-interview'),
+
+    # Interviews Management System (Phase 5)
+    path('interviews/', InterviewListView.as_view(), name='interviews-list'),
+    path('interviews/<int:pk>/', InterviewDetailView.as_view(), name='interviews-detail'),
+    path('interviews/<int:pk>/cancel/', InterviewCancelView.as_view(), name='interviews-cancel'),
+    path('interviews/<int:pk>/complete/', InterviewCompleteView.as_view(), name='interviews-complete'),
 ]

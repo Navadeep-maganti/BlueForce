@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 from .models import (
     WorkerProfile,
@@ -19,18 +20,112 @@ from .serializers import (
     CertificationSerializer,
     ProofOfWorkSerializer,
     PublicWorkerProfileSerializer,
+    CandidateDiscoveryCardSerializer,
 )
 from apps.verification.models import VerificationDocument
 from common.responses import success_response, error_response
 from common.permissions import IsWorker
+from common.pagination import StandardResultsSetPagination
+
+class WorkerDiscoveryListView(APIView):
+    """
+    GET /api/v1/workers/
+    Candidate discovery endpoint for employers:
+    - search: worker name, primary trade, bio, tagline
+    - skill: filter by specific trade skill
+    - location / city: filter by geography
+    - experience: minimum years of experience
+    - availability: available_now, within_15_days, etc.
+    - minimum_trust_score: filter by minimum total trust score
+    - verified_only: filter for government/Aadhaar verified workers
+    - ordering: -trust_score_total, years_of_experience, -created_at
+    """
+    permission_classes = [AllowAny]
+    pagination_class = StandardResultsSetPagination
+
+    def get(self, request):
+        workers = WorkerProfile.objects.select_related('user').prefetch_related('skills', 'certifications', 'proof_of_works')
+
+        # 1. Keyword Search
+        search = request.query_params.get('search')
+        if search:
+            workers = workers.filter(
+                Q(full_name__icontains=search) |
+                Q(primary_trade__icontains=search) |
+                Q(tagline__icontains=search) |
+                Q(bio__icontains=search) |
+                Q(city__icontains=search) |
+                Q(skills__skill_name__icontains=search)
+            )
+
+        # 2. Specific Skill Filter
+        skill = request.query_params.get('skill')
+        if skill and skill.lower() != 'all':
+            workers = workers.filter(
+                Q(skills__skill_name__icontains=skill) |
+                Q(primary_trade__icontains=skill)
+            )
+
+        # 3. Location / City Filter
+        location = request.query_params.get('location') or request.query_params.get('city')
+        if location and location.lower() != 'all':
+            workers = workers.filter(
+                Q(city__icontains=location) |
+                Q(location__icontains=location)
+            )
+
+        # 4. Minimum Experience (Years)
+        experience = request.query_params.get('experience')
+        if experience:
+            try:
+                workers = workers.filter(years_of_experience__gte=int(experience))
+            except ValueError:
+                pass
+
+        # 5. Availability Filter
+        availability = request.query_params.get('availability')
+        if availability and availability.lower() != 'all':
+            workers = workers.filter(availability__iexact=availability)
+
+        # 6. Minimum Trust Score
+        min_trust = request.query_params.get('minimum_trust_score')
+        if min_trust:
+            try:
+                workers = workers.filter(trust_score_total__gte=int(min_trust))
+            except ValueError:
+                pass
+
+        # 7. Verified Only Filter
+        verified_only = request.query_params.get('verified_only')
+        if verified_only and verified_only.lower() in ['true', '1', 'yes']:
+            workers = workers.filter(
+                Q(user__is_verified=True) |
+                Q(trust_identity_score__gte=20)
+            )
+
+        # 8. Ordering
+        ordering = request.query_params.get('ordering', '-trust_score_total')
+        allowed_orderings = [
+            'trust_score_total', '-trust_score_total',
+            'years_of_experience', '-years_of_experience',
+            'created_at', '-created_at'
+        ]
+        if ordering in allowed_orderings:
+            workers = workers.order_by(ordering)
+        else:
+            workers = workers.order_by('-trust_score_total')
+
+        workers = workers.distinct()
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(workers, request)
+        serializer = CandidateDiscoveryCardSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 class WorkerProfileMeView(APIView):
     """
     GET /api/v1/workers/me/
-    Aggregated single-call endpoint returning User, Profile, Skills, Certs, Proof of Work, Reviews, and Trust Score.
-
     PATCH /api/v1/workers/me/
-    Updates the authenticated worker's profile attributes.
     """
     permission_classes = [IsAuthenticated, IsWorker]
 
@@ -54,7 +149,6 @@ class WorkerProfileMeView(APIView):
         serializer.save()
         worker.calculate_trust_score()
         
-        # Return full updated profile
         updated_data = WorkerProfileAggregatedSerializer(worker).data
         return success_response(
             data=updated_data,
@@ -64,7 +158,6 @@ class WorkerProfileMeView(APIView):
 class SkillTaxonomyListView(APIView):
     """
     GET /api/v1/skills/
-    Returns searchable trade skill taxonomy.
     """
     permission_classes = [AllowAny]
 
@@ -104,10 +197,8 @@ class WorkerSkillListCreateView(APIView):
                 status_code=status.HTTP_400_BAD_REQUEST
             )
         
-        # Save skill linked to worker
         skill = serializer.save(worker=worker, is_verified=True, verification_source='Self Declared & Tested')
         
-        # Recalculate trust score skills component
         skill_count = worker.skills.count()
         worker.trust_skills_score = min(20, 15 + skill_count)
         worker.calculate_trust_score()
@@ -170,7 +261,6 @@ class WorkerCertificationListCreateView(APIView):
         
         cert = serializer.save(worker=worker, verification_status='pending')
 
-        # Automatically enqueue in VerificationDocument queue
         VerificationDocument.objects.create(
             entity_type='worker',
             worker=worker,
@@ -228,7 +318,6 @@ class WorkerProofOfWorkListCreateView(APIView):
             verified_by='Site Supervisor Verification Stamp'
         )
 
-        # Bump completed jobs trust score
         worker.trust_completed_jobs_score = min(10, worker.trust_completed_jobs_score + 1)
         worker.calculate_trust_score()
 
@@ -273,7 +362,12 @@ class PublicWorkerProfileView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, pk):
-        worker = get_object_or_404(WorkerProfile, pk=pk)
+        worker = get_object_or_404(
+            WorkerProfile.objects.select_related('user').prefetch_related(
+                'skills', 'certifications', 'proof_of_works', 'experiences', 'reviews'
+            ),
+            pk=pk
+        )
         serializer = PublicWorkerProfileSerializer(worker)
         return success_response(
             data=serializer.data,

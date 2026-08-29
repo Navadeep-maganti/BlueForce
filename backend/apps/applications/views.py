@@ -15,6 +15,8 @@ from .serializers import (
     ApplicationStageUpdateSerializer,
     ScheduleInterviewSerializer,
     InterviewSerializer,
+    InterviewUpdateSerializer,
+    InterviewCompleteSerializer,
 )
 from common.responses import success_response, error_response
 from common.permissions import IsWorker, IsEmployer
@@ -22,12 +24,6 @@ from common.permissions import IsWorker, IsEmployer
 class ApplyJobView(APIView):
     """
     POST /api/v1/jobs/<id>/apply/
-    Validates:
-    1. Authenticated user is Worker
-    2. Job is active / open
-    3. Duplicate check: has worker already applied?
-    4. Profile completeness check
-    Creates Application + Initial Timeline Event + Notifications.
     """
     permission_classes = [IsAuthenticated, IsWorker]
 
@@ -36,32 +32,27 @@ class ApplyJobView(APIView):
         worker = get_object_or_404(WorkerProfile, user=request.user)
         job = get_object_or_404(Job, pk=pk)
 
-        # 1. Job Active Check
         if job.status != 'active':
             return error_response(
                 message="This job opening is no longer accepting applications (status: closed/paused).",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
-        # 2. Duplicate Application Check
         if Application.objects.filter(job=job, worker=worker).exists():
             return error_response(
                 message="You have already submitted an application for this position.",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
-        # 3. Profile Completeness Check
         if worker.trust_score_total < 40:
             return error_response(
                 message="Your profile strength is below the minimum verification threshold (40/100). Please add skills or proof of work before applying.",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
-        # 4. Compute AI Match Compatibility
         match_data = calculate_job_match(worker, job)
         match_score = match_data.get('match_percentage', 88)
 
-        # 5. Create Application
         application = Application.objects.create(
             job=job,
             worker=worker,
@@ -69,7 +60,6 @@ class ApplyJobView(APIView):
             match_score=match_score
         )
 
-        # 6. Create Initial Timeline Event
         ApplicationTimelineEvent.objects.create(
             application=application,
             stage=Application.StageChoices.APPLIED,
@@ -77,7 +67,6 @@ class ApplyJobView(APIView):
             completed=True
         )
 
-        # 7. Create In-App Notifications
         Notification.objects.create(
             user=job.employer.user,
             title=f"New Candidate Applied: {worker.full_name}",
@@ -103,7 +92,6 @@ class ApplyJobView(APIView):
 class WorkerApplicationListView(APIView):
     """
     GET /api/v1/applications/my/
-    Lists all job applications submitted by the authenticated worker with full timelines.
     """
     permission_classes = [IsAuthenticated, IsWorker]
 
@@ -119,9 +107,6 @@ class WorkerApplicationListView(APIView):
 class EmployerApplicationListView(APIView):
     """
     GET /api/v1/applications/employer/
-    Lists candidate applications for employer's jobs with filters:
-    - job_id
-    - stage
     """
     permission_classes = [IsAuthenticated, IsEmployer]
 
@@ -160,7 +145,6 @@ class ApplicationDetailView(APIView):
 class ApplicationStageUpdateView(APIView):
     """
     PATCH /api/v1/applications/<id>/stage/
-    Enforces strict State Transition Logic Matrix and generates timeline event + notifications.
     """
     permission_classes = [IsAuthenticated, IsEmployer]
 
@@ -184,13 +168,11 @@ class ApplicationStageUpdateView(APIView):
         note = serializer.validated_data.get('note') or f"Application moved to {new_stage}."
         rejection_reason = serializer.validated_data.get('rejection_reason')
 
-        # Update application
         application.current_stage = new_stage
         if rejection_reason:
             application.rejection_reason = rejection_reason
         application.save()
 
-        # Create Timeline Event
         ApplicationTimelineEvent.objects.create(
             application=application,
             stage=new_stage,
@@ -198,7 +180,6 @@ class ApplicationStageUpdateView(APIView):
             completed=True
         )
 
-        # Send Worker Notification
         Notification.objects.create(
             user=application.worker.user,
             title=f"Application Update: {new_stage}",
@@ -214,8 +195,7 @@ class ApplicationStageUpdateView(APIView):
 
 class ScheduleInterviewView(APIView):
     """
-    POST /api/v1/applications/<id>/schedule-interview/
-    Schedules an interview, sets stage to Interview, creates timeline event, and notifies worker.
+    POST /api/v1/applications/<application_id>/schedule-interview/
     """
     permission_classes = [IsAuthenticated, IsEmployer]
 
@@ -232,35 +212,228 @@ class ScheduleInterviewView(APIView):
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
-        # Create or update interview record
+        validated = serializer.validated_data.copy()
+        validated['created_by'] = request.user
+        validated['status'] = Interview.StatusChoices.SCHEDULED
+        if not validated.get('location_or_link'):
+            validated['location_or_link'] = validated.get('location') or validated.get('meeting_link')
+
         interview, created = Interview.objects.update_or_create(
             application=application,
-            defaults=serializer.validated_data
+            defaults=validated
         )
 
-        # Transition stage to Interview
         application.current_stage = Application.StageChoices.INTERVIEW
         application.save()
 
-        # Add timeline event
         ApplicationTimelineEvent.objects.create(
             application=application,
             stage=Application.StageChoices.INTERVIEW,
-            note=f"Interview scheduled ({interview.interview_type}) on {interview.date} at {interview.time}.",
+            note=f"Interview scheduled ({interview.get_interview_type_display()}) on {interview.date or interview.scheduled_at} at {interview.time}.",
             completed=True
         )
 
-        # Send High-Priority Notification
         Notification.objects.create(
             user=application.worker.user,
             title="Interview Scheduled! 📅",
-            message=f"{application.job.employer.company_name} scheduled an interview for {application.job.title} on {interview.date} at {interview.time}.",
+            message=f"{application.job.employer.company_name} scheduled an interview for {application.job.title} on {interview.date or interview.scheduled_at} at {interview.time}.",
             notification_type='interview',
             action_url='/worker/applications'
         )
 
         return success_response(
-            data=ApplicationSerializer(application).data,
+            data=InterviewSerializer(interview).data,
             message="Interview scheduled and candidate notified.",
             status_code=status.HTTP_201_CREATED
+        )
+
+class InterviewListView(APIView):
+    """
+    GET /api/v1/interviews/
+    Lists interviews relevant to authenticated user:
+    - Workers: interviews for their applications
+    - Employers: interviews for their jobs
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        status_param = request.query_params.get('status')
+        if hasattr(request.user, 'worker_profile'):
+            interviews = Interview.objects.filter(application__worker=request.user.worker_profile)
+        elif hasattr(request.user, 'employer_profile'):
+            interviews = Interview.objects.filter(application__job__employer=request.user.employer_profile)
+        elif request.user.is_staff:
+            interviews = Interview.objects.all()
+        else:
+            interviews = Interview.objects.none()
+
+        if status_param and status_param.lower() != 'all':
+            interviews = interviews.filter(status__iexact=status_param)
+
+        interviews = interviews.select_related(
+            'application',
+            'application__job',
+            'application__job__employer',
+            'application__worker',
+            'application__worker__user'
+        )
+        serializer = InterviewSerializer(interviews, many=True)
+        return success_response(
+            data=serializer.data,
+            message="Interviews retrieved successfully."
+        )
+
+class InterviewDetailView(APIView):
+    """
+    GET /api/v1/interviews/<id>/
+    PATCH /api/v1/interviews/<id>/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        interview = get_object_or_404(
+            Interview.objects.select_related(
+                'application',
+                'application__job',
+                'application__job__employer',
+                'application__worker',
+                'application__worker__user'
+            ),
+            pk=pk
+        )
+        
+        # Privacy & ownership check
+        if (hasattr(request.user, 'worker_profile') and interview.application.worker != request.user.worker_profile) and \
+           (hasattr(request.user, 'employer_profile') and interview.application.job.employer != request.user.employer_profile) and \
+           not request.user.is_staff:
+            return error_response(
+                message="You do not have permission to view this interview.",
+                status_code=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = InterviewSerializer(interview)
+        return success_response(data=serializer.data)
+
+    def patch(self, request, pk):
+        employer = get_object_or_404(EmployerProfile, user=request.user)
+        interview = get_object_or_404(Interview, pk=pk, application__job__employer=employer)
+
+        serializer = InterviewUpdateSerializer(interview, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return error_response(
+                message="Interview update validation failed.",
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer.save()
+
+        # Add timeline event on reschedule
+        ApplicationTimelineEvent.objects.create(
+            application=interview.application,
+            stage=Application.StageChoices.INTERVIEW,
+            note=f"Interview updated/rescheduled to {interview.date or interview.scheduled_at} at {interview.time}.",
+            completed=True
+        )
+
+        return success_response(
+            data=InterviewSerializer(interview).data,
+            message="Interview details updated successfully."
+        )
+
+class InterviewCancelView(APIView):
+    """
+    POST /api/v1/interviews/<id>/cancel/
+    """
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        employer = get_object_or_404(EmployerProfile, user=request.user)
+        interview = get_object_or_404(Interview, pk=pk, application__job__employer=employer)
+
+        reason = request.data.get('reason', 'Interview cancelled by employer.')
+        interview.status = Interview.StatusChoices.CANCELLED
+        interview.feedback = f"Cancelled: {reason}"
+        interview.save()
+
+        ApplicationTimelineEvent.objects.create(
+            application=interview.application,
+            stage=Application.StageChoices.INTERVIEW,
+            note=f"Interview cancelled. Reason: {reason}",
+            completed=False
+        )
+
+        Notification.objects.create(
+            user=interview.application.worker.user,
+            title="Interview Notice",
+            message=f"Your scheduled interview for {interview.application.job.title} was cancelled: {reason}",
+            notification_type='interview',
+            action_url='/worker/applications'
+        )
+
+        return success_response(
+            data=InterviewSerializer(interview).data,
+            message="Interview cancelled and history preserved."
+        )
+
+class InterviewCompleteView(APIView):
+    """
+    POST /api/v1/interviews/<id>/complete/
+    """
+    permission_classes = [IsAuthenticated, IsEmployer]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        employer = get_object_or_404(EmployerProfile, user=request.user)
+        interview = get_object_or_404(Interview, pk=pk, application__job__employer=employer)
+
+        serializer = InterviewCompleteSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(
+                message="Complete validation failed.",
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        feedback = serializer.validated_data.get('feedback', 'Candidate successfully completed trade test.')
+        rating = serializer.validated_data.get('rating')
+        move_to_selected = serializer.validated_data.get('move_to_selected', True)
+
+        interview.status = Interview.StatusChoices.COMPLETED
+        interview.feedback = feedback
+        interview.save()
+
+        if rating:
+            interview.application.rating = rating
+
+        if move_to_selected:
+            interview.application.current_stage = Application.StageChoices.SELECTED
+            interview.application.save()
+
+            ApplicationTimelineEvent.objects.create(
+                application=interview.application,
+                stage=Application.StageChoices.SELECTED,
+                note=f"Trade test completed successfully. Feedback: {feedback}",
+                completed=True
+            )
+
+            Notification.objects.create(
+                user=interview.application.worker.user,
+                title="Congratulations! Trade Test Passed 🎉",
+                message=f"You have been selected following your interview for {interview.application.job.title}.",
+                notification_type='application_update',
+                action_url='/worker/applications'
+            )
+        else:
+            ApplicationTimelineEvent.objects.create(
+                application=interview.application,
+                stage=Application.StageChoices.INTERVIEW,
+                note=f"Interview marked completed. Feedback: {feedback}",
+                completed=True
+            )
+
+        return success_response(
+            data=InterviewSerializer(interview).data,
+            message="Interview marked as completed."
         )
