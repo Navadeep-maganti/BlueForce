@@ -195,6 +195,36 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer Menu */}
       {menuOpen && (
         <div className="mobile-menu">
+          {/* User Profile Card on Mobile */}
+          {user && (
+            <div className="flex items-center gap-3 p-3 mb-2 rounded-xl bg-slate-50 border border-slate-200/80">
+              <img
+                src={
+                  user.avatarUrl ||
+                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'
+                }
+                alt=""
+                className="w-9 h-9 rounded-full object-cover border border-slate-300"
+                style={{ width: '36px', height: '36px', minWidth: '36px', borderRadius: '9999px' }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold text-navy truncate">{user.name}</div>
+                <div className="text-[10px] text-slate-500 capitalize">{user.role} Account</div>
+              </div>
+              <button
+                onClick={() => {
+                  store.logout();
+                  navigate('/');
+                }}
+                className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                title={t('navigation:logout', 'Log out')}
+                aria-label={t('navigation:logout', 'Log out')}
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          )}
+
           <div className="mobile-menu__links">
             {links.map((link) => (
               <button
@@ -236,6 +266,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Building2 size={15} /> {t('navigation:switchRoleEmployer', 'Employer')}
             </button>
           </div>
+
+          {/* Dedicated Logout Action on Mobile */}
+          {user && (
+            <div className="pt-3 border-t border-slate-100 mt-2">
+              <button
+                onClick={() => {
+                  store.logout();
+                  navigate('/');
+                }}
+                className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-bold text-xs transition-colors"
+              >
+                <LogOut size={16} />
+                <span>{t('navigation:logout', 'Log out')}</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>
