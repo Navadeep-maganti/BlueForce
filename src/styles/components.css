@@ -475,3 +475,59 @@
     flex: 1;
   }
 }
+
+/* Profile & Dashboard Navigation Tabs */
+.profile-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.profile-tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #64748b;
+  border-bottom: 2.5px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+}
+
+.profile-tab-btn:hover {
+  color: #0f172a;
+}
+
+.profile-tab-btn.is-active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.profile-tab-btn .tab-count {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.profile-tab-btn.is-active .tab-count {
+  background: #eff6ff;
+  color: #2563eb;
+}

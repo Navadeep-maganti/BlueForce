@@ -113,53 +113,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-200 overflow-x-auto space-x-4">
+      <div className="profile-tabs-nav">
         <button
           onClick={() => setActiveTab('verifications')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'verifications'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'verifications' ? 'is-active' : ''}`}
         >
-          <FileCheck className="w-3.5 h-3.5" />
-          {t('verification:adminQueue.title', 'Credential Queue')} ({pendingVerifsCount})
+          <FileCheck className="w-4 h-4" />
+          <span>{t('verification:adminQueue.title', 'Credential Queue')}</span>
+          <span className="tab-count">{pendingVerifsCount}</span>
         </button>
 
         <button
           onClick={() => setActiveTab('reports')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'reports'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'reports' ? 'is-active' : ''}`}
         >
-          <AlertTriangle className="w-3.5 h-3.5" />
-          {t('analytics:reports.exportReport', 'Disputes & Reports')} ({pendingReportsCount})
+          <AlertTriangle className="w-4 h-4" />
+          <span>{t('analytics:reports.exportReport', 'Disputes & Reports')}</span>
+          <span className="tab-count">{pendingReportsCount}</span>
         </button>
 
         <button
           onClick={() => setActiveTab('workers')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'workers'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'workers' ? 'is-active' : ''}`}
         >
-          <Users className="w-3.5 h-3.5" />
-          {t('navigation:candidates', 'Worker Registry')} ({workers.length})
+          <Users className="w-4 h-4" />
+          <span>{t('navigation:candidates', 'Worker Registry')}</span>
+          <span className="tab-count">{workers.length}</span>
         </button>
 
         <button
           onClick={() => setActiveTab('jobs')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'jobs'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'jobs' ? 'is-active' : ''}`}
         >
-          <Briefcase className="w-3.5 h-3.5" />
-          {t('navigation:jobs', 'Job Openings')} ({jobs.length})
+          <Briefcase className="w-4 h-4" />
+          <span>{t('navigation:jobs', 'Job Openings')}</span>
+          <span className="tab-count">{jobs.length}</span>
         </button>
       </div>
 

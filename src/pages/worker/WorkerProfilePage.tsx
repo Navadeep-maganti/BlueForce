@@ -339,46 +339,38 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({ onNavigate
       <TrustScoreWidget scoreData={worker.trustScore} />
 
       {/* Tabs Navigation */}
-      <div className="flex border-b border-slate-200 overflow-x-auto space-x-4">
+      <div className="profile-tabs-nav">
         <button
           onClick={() => setActiveTab('proof')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'proof'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'proof' ? 'is-active' : ''}`}
         >
-          <Camera className="w-3.5 h-3.5" /> {t('worker:tabs.workProof', 'Proof-of-Work')} ({worker.proofOfWork.length})
+          <Camera className="w-4 h-4" />
+          <span>{t('worker:tabs.workProof', 'Proof-of-Work')}</span>
+          <span className="tab-count">{worker.proofOfWork.length}</span>
         </button>
         <button
           onClick={() => setActiveTab('skills')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'skills'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'skills' ? 'is-active' : ''}`}
         >
-          <Wrench className="w-3.5 h-3.5" /> {t('worker:tabs.skills', 'Verified Skills')} ({worker.skills.length})
+          <Wrench className="w-4 h-4" />
+          <span>{t('worker:tabs.skills', 'Verified Skills')}</span>
+          <span className="tab-count">{worker.skills.length}</span>
         </button>
         <button
           onClick={() => setActiveTab('certs')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'certs'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'certs' ? 'is-active' : ''}`}
         >
-          <Award className="w-3.5 h-3.5" /> {t('worker:tabs.certifications', 'Government Certifications')} ({worker.certifications.length})
+          <Award className="w-4 h-4" />
+          <span>{t('worker:tabs.certifications', 'Government Certifications')}</span>
+          <span className="tab-count">{worker.certifications.length}</span>
         </button>
         <button
           onClick={() => setActiveTab('experience')}
-          className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'experience'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-navy'
-          }`}
+          className={`profile-tab-btn ${activeTab === 'experience' ? 'is-active' : ''}`}
         >
-          <Briefcase className="w-3.5 h-3.5" /> {t('worker:tabs.experience', 'Work History')} ({worker.experience.length})
+          <Briefcase className="w-4 h-4" />
+          <span>{t('worker:tabs.experience', 'Work History')}</span>
+          <span className="tab-count">{worker.experience.length}</span>
         </button>
       </div>
 
