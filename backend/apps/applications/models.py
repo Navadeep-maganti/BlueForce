@@ -9,6 +9,7 @@ class Application(models.Model):
         SELECTED = 'Selected', 'Selected'
         HIRED = 'Hired', 'Hired'
         REJECTED = 'Rejected', 'Rejected'
+        WITHDRAWN = 'Withdrawn', 'Withdrawn'
 
     job = models.ForeignKey('jobs.Job', on_delete=models.CASCADE, related_name='applications')
     worker = models.ForeignKey('workers.WorkerProfile', on_delete=models.CASCADE, related_name='applications')

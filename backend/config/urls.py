@@ -6,6 +6,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from apps.workers.views import SkillTaxonomyListView
+from apps.jobs.views import EmployerJobListCreateView, EmployerJobDetailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -15,7 +16,12 @@ urlpatterns = [
     path('api/v1/workers/', include('apps.workers.urls')),
     path('api/v1/skills/', SkillTaxonomyListView.as_view(), name='skill-taxonomy-list'),
     path('api/v1/employers/', include('apps.employers.urls')),
+    
+    # Public & Employer Job System
     path('api/v1/jobs/', include('apps.jobs.urls')),
+    path('api/v1/employer/jobs/', EmployerJobListCreateView.as_view(), name='employer-jobs-list-create'),
+    path('api/v1/employer/jobs/<int:pk>/', EmployerJobDetailView.as_view(), name='employer-jobs-detail'),
+
     path('api/v1/applications/', include('apps.applications.urls')),
     path('api/v1/verification/', include('apps.verification.urls')),
     path('api/v1/matching/', include('apps.matching.urls')),

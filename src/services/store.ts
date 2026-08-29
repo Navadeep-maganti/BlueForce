@@ -26,6 +26,8 @@ import {
 } from './mockData';
 import { authApi, RegisterPayload } from './api/authApi';
 import { workerApi } from './api/workerApi';
+import { jobApi, JobFilterParams } from './api/jobApi';
+import { applicationApi } from './api/applicationApi';
 
 const STORAGE_KEYS = {
   USER: 'kaushal_current_user',
@@ -377,6 +379,11 @@ class Store {
 
     this.applications.unshift(newApp);
     this.saveToStorage();
+
+    // Async backend apply
+    const numericJobId = parseInt(jobId.replace(/\D/g, ''), 10) || 1;
+    applicationApi.applyForJob(numericJobId).catch(() => console.log('Application saved locally.'));
+
     return { success: true, message: 'Applied successfully!', applicationId: newApp.id };
   }
 
@@ -477,6 +484,9 @@ class Store {
       completed: true,
     });
     this.saveToStorage();
+
+    const numericAppId = parseInt(applicationId.replace(/\D/g, ''), 10) || 1;
+    applicationApi.updateStage(numericAppId, newStage, note).catch(() => console.log('Stage synced locally.'));
   }
 
   scheduleInterview(applicationId: string, interview: InterviewDetails) {
@@ -504,6 +514,63 @@ class Store {
     });
 
     this.saveToStorage();
+
+    const numericAppId = parseInt(applicationId.replace(/\D/g, ''), 10) || 1;
+    applicationApi.scheduleInterview(numericAppId, {
+      date: interview.date,
+      time: interview.time,
+      interview_type: interview.type,
+      location_or_link: interview.locationOrLink,
+      instructions: interview.instructions,
+      interviewer_name: interview.interviewerName,
+    }).catch(() => console.log('Interview saved locally.'));
+  }
+
+  async fetchPublicJobs(params: JobFilterParams = {}) {
+    try {
+      const res = await jobApi.getPublicJobs(params);
+      if (res?.results && res.results.length > 0) {
+        this.jobs = res.results.map((j: any) => ({
+          id: String(j.id),
+          employerId: String(j.employer?.id || 'emp_1'),
+          companyName: j.company_name || 'Industrial Plant',
+          companyLogoUrl: j.company_logo_url || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200',
+          isCompanyVerified: j.is_company_verified ?? true,
+          title: j.title,
+          tradeCategory: j.trade_category,
+          location: j.location,
+          city: j.city,
+          distanceKm: j.distance_km || 5.0,
+          salaryMin: j.salary_min,
+          salaryMax: j.salary_max,
+          salaryPeriod: j.salary_period || 'monthly',
+          experienceRequiredYears: j.experience_required_years || 3,
+          jobType: j.job_type || 'Full-time',
+          shift: j.shift || 'Day Shift',
+          openings: j.openings || 2,
+          joiningDate: j.joining_date || 'Within 15 Days',
+          deadlineDate: j.deadline_date || '2026-04-30',
+          postedAt: 'Active Now',
+          requiredSkills: j.required_skills || [],
+          description: j.description,
+          benefits: j.benefits || ['PF & ESI', 'Overtime Pay'],
+          workAddress: j.work_address || j.location,
+          status: j.status || 'active',
+          matchData: j.match_data || {
+            matchPercentage: 91,
+            skillCompatibility: { score: 44, max: 50, details: 'Matches trade requirements' },
+            experienceScore: { score: 18, max: 20, details: 'Verified tenure' },
+            locationScore: { score: 14, max: 15, details: 'Local candidate' },
+            certificationScore: { score: 5, max: 5, details: 'Verified certificates' },
+            availabilityScore: { score: 10, max: 10, details: 'Immediate' },
+            reasons: ['Strong trade profile', 'Valid government credentials'],
+          },
+        }));
+        this.saveToStorage();
+      }
+    } catch (e) {
+      console.log('Public jobs loaded from cache/fallback.');
+    }
   }
 
   createJob(jobData: Partial<Job> & { title: string; tradeCategory: string; description: string; jobType: any; shift: any; openings: number; salaryMin: number; salaryMax: number }): Job {
@@ -539,6 +606,31 @@ class Store {
 
     this.jobs.unshift(newJob);
     this.saveToStorage();
+
+    // Async sync with backend if employer authenticated
+    jobApi.createJob({
+      title: jobData.title,
+      trade_category: jobData.tradeCategory,
+      location: jobData.location || `${jobData.city || 'Vijayawada'}, AP`,
+      city: jobData.city || 'Vijayawada',
+      salary_min: jobData.salaryMin,
+      salary_max: jobData.salaryMax,
+      salary_period: jobData.salaryPeriod || 'monthly',
+      experience_required_years: jobData.experienceRequiredYears || 3,
+      job_type: jobData.jobType || 'Full-time',
+      shift: jobData.shift || 'Day Shift',
+      openings: jobData.openings || 2,
+      joining_date: jobData.joiningDate || 'Within 15 Days',
+      deadline_date: jobData.deadlineDate || '2026-04-30',
+      required_skills: jobData.requiredSkills || [],
+      preferred_skills: jobData.preferredSkills || [],
+      required_certifications: jobData.requiredCertifications || [],
+      description: jobData.description,
+      benefits: jobData.benefits || [],
+      work_address: jobData.workAddress || 'Autonagar Industrial Area',
+      status: jobData.status || 'active',
+    }).catch(() => console.log('Job persisted locally'));
+
     return newJob;
   }
 

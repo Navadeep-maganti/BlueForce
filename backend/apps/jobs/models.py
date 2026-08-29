@@ -14,7 +14,8 @@ class Job(models.Model):
         FLEXIBLE = 'Flexible', 'Flexible'
 
     class StatusChoices(models.TextChoices):
-        ACTIVE = 'active', 'Active'
+        DRAFT = 'draft', 'Draft'
+        ACTIVE = 'active', 'Active / Open'
         PAUSED = 'paused', 'Paused'
         CLOSED = 'closed', 'Closed'
 
