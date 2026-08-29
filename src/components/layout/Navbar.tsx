@@ -77,13 +77,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : '/admin/dashboard'
             )
           }
-          aria-label={`${t('navigation:brandName', 'KaushalConnect')} home`}
+          aria-label={`${t('navigation:brandName', 'BlueForce')} home`}
         >
           <span className="brand__mark">
             <ShieldCheck size={19} />
           </span>
           <span>
-            Kaushal<b>Connect</b>
+            Blue<b>Force</b>
           </span>
         </button>
 

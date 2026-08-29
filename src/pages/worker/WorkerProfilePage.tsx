@@ -17,11 +17,13 @@ import {
   Edit3,
   Trash2,
   X,
+  Lock,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 import { TrustScoreWidget } from '../../components/trust/TrustScoreWidget';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { DigiLockerModal } from '../../components/verification/DigiLockerModal';
 
 interface WorkerProfilePageProps {
   onNavigate: (path: string) => void;
@@ -40,6 +42,7 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({ onNavigate
   const [showAddSkillModal, setShowAddSkillModal] = useState(false);
   const [showAddCertModal, setShowAddCertModal] = useState(false);
   const [showAddExpModal, setShowAddExpModal] = useState(false);
+  const [showDigiLockerModal, setShowDigiLockerModal] = useState(false);
 
   // Edit Profile Form State
   const [editName, setEditName] = useState(worker.fullName);
@@ -240,22 +243,32 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({ onNavigate
               </span>
             </div>
 
-            <button
-              onClick={() => {
-                setEditName(worker.fullName);
-                setEditTrade(worker.primaryTrade);
-                setEditTagline(worker.tagline);
-                setEditBio(worker.bio);
-                setEditLocation(worker.location);
-                setEditPhone(worker.phone);
-                setEditSalaryMin(worker.expectedSalaryMonthly.min);
-                setEditAvailability(worker.availability);
-                setShowEditProfileModal(true);
-              }}
-              className="btn btn-secondary btn-sm text-xs flex items-center gap-1 font-bold"
-            >
-              <Edit3 className="w-3.5 h-3.5" /> Edit Profile Details
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setShowDigiLockerModal(true)}
+                className="btn btn-primary btn-sm text-xs flex items-center justify-center gap-1.5 font-bold shadow-xs py-2 px-3.5"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                {store.currentUser?.isVerified ? 'DigiLocker Verified' : 'Verify with DigiLocker'}
+              </button>
+
+              <button
+                onClick={() => {
+                  setEditName(worker.fullName);
+                  setEditTrade(worker.primaryTrade);
+                  setEditTagline(worker.tagline);
+                  setEditBio(worker.bio);
+                  setEditLocation(worker.location);
+                  setEditPhone(worker.phone);
+                  setEditSalaryMin(worker.expectedSalaryMonthly.min);
+                  setEditAvailability(worker.availability);
+                  setShowEditProfileModal(true);
+                }}
+                className="btn btn-secondary btn-sm text-xs flex items-center justify-center gap-1 font-bold py-2 px-3.5"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> Edit Details
+              </button>
+            </div>
           </div>
         </div>
 
@@ -278,6 +291,48 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({ onNavigate
             </span>
           )}
         </div>
+      </div>
+
+      {/* DigiLocker Official Verification Card */}
+      <div className="p-4 sm:p-5 rounded-2xl border bg-gradient-to-r from-blue-50/80 via-white to-emerald-50/60 border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-start gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm text-lg font-bold">
+            🔒
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black text-navy">
+                DigiLocker Government eKYC & Document Authentication
+              </h3>
+              {store.currentUser?.isVerified ? (
+                <span className="badge badge-verified text-[10px] py-0 font-bold">
+                  ✓ Active & Verified
+                </span>
+              ) : (
+                <span className="badge text-[10px] bg-amber-100 text-amber-800 border border-amber-300 font-bold py-0">
+                  +20 Pts Available
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-600 mt-0.5 max-w-2xl leading-relaxed">
+              {store.currentUser?.isVerified
+                ? `Authenticated with UIDAI Aadhaar (${worker.aadhaarMasked || 'XXXX-XXXX-8921'}). Government trade diplomas are securely linked to your profile.`
+                : 'Fetch your authentic Aadhaar identity card and NCVT/ITI National Trade Certificates directly from DigiLocker without manual paperwork.'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowDigiLockerModal(true)}
+          className={`btn btn-sm text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 flex-shrink-0 ${
+            store.currentUser?.isVerified
+              ? 'btn-secondary text-slate-700'
+              : 'btn-primary shadow-xs'
+          }`}
+        >
+          <Lock className="w-3.5 h-3.5" />
+          {store.currentUser?.isVerified ? 'View DigiLocker Credentials' : 'Verify with DigiLocker'}
+        </button>
       </div>
 
       {/* Trust Score 100-Point Breakdown Accordion */}
@@ -459,12 +514,20 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({ onNavigate
                 NSDC, NCVT, State Board of Technical Education, and CEIG Wireman Licenses
               </p>
             </div>
-            <button
-              onClick={() => setShowAddCertModal(true)}
-              className="btn btn-primary btn-sm flex items-center gap-1 text-xs"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Certificate
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowDigiLockerModal(true)}
+                className="btn btn-secondary btn-sm flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100 transition-all"
+              >
+                <Lock className="w-3.5 h-3.5" /> Fetch from DigiLocker
+              </button>
+              <button
+                onClick={() => setShowAddCertModal(true)}
+                className="btn btn-primary btn-sm flex items-center gap-1 text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Certificate
+              </button>
+            </div>
           </div>
 
           {worker.certifications.length === 0 ? (
@@ -989,6 +1052,12 @@ export const WorkerProfilePage: React.FC<WorkerProfilePageProps> = ({ onNavigate
           </div>
         </div>
       )}
+
+      {/* DigiLocker eKYC & Document Authentication Modal */}
+      <DigiLockerModal
+        isOpen={showDigiLockerModal}
+        onClose={() => setShowDigiLockerModal(false)}
+      />
     </div>
   );
 };

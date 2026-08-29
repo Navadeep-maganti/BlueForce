@@ -15,11 +15,13 @@ import {
   Target,
   Award,
   ChevronRight,
+  Lock,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 import { TrustScoreWidget } from '../../components/trust/TrustScoreWidget';
 import { MatchScoreModal } from '../../components/matching/MatchScoreModal';
+import { DigiLockerModal } from '../../components/verification/DigiLockerModal';
 import { Job, JobMatchBreakdown } from '../../types';
 
 interface WorkerDashboardProps {
@@ -38,6 +40,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
   const careerInsight = null;
 
   const [selectedMatch, setSelectedMatch] = useState<{ match: JobMatchBreakdown; title: string; company: string } | null>(null);
+  const [showDigiLockerModal, setShowDigiLockerModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleApply = (job: Job) => {
@@ -56,50 +59,50 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
   };
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Toast alert */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 p-3.5 rounded-xl bg-navy-900 text-white shadow-xl flex items-center gap-2.5 border border-blue-500 animate-slideUp">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-semibold">{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-navy-900 text-white shadow-2xl flex items-center gap-3 border border-emerald-500 animate-slideUp">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <span className="text-sm font-semibold">{toastMessage}</span>
         </div>
       )}
 
       {/* Top Welcome Banner */}
-      <div className="kc-card p-4 sm:p-5 bg-white border flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-        <div className="flex items-center gap-3.5">
+      <div className="kc-card p-6 sm:p-7 bg-white border border-slate-200/80 shadow-xs rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="flex items-center gap-4">
           <img
             src={worker.avatarUrl}
             alt={worker.fullName}
-            className="w-12 h-12 rounded-xl object-cover border border-primary/30 shadow-xs flex-shrink-0"
-            style={{ width: '48px', height: '48px', minWidth: '48px', maxWidth: '48px', objectFit: 'cover' }}
+            className="w-14 h-14 rounded-2xl object-cover border border-primary/30 shadow-xs flex-shrink-0"
+            style={{ width: '56px', height: '56px', minWidth: '56px', maxWidth: '56px', objectFit: 'cover' }}
           />
           <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-base sm:text-lg font-black text-navy">{t('worker:greeting', 'Good morning')} 👋</h1>
-              <span className="badge badge-verified text-[10px] py-0">
-                <ShieldCheck className="w-3 h-3" /> {t('common:status.verified', 'Verified')}
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-navy tracking-tight">{t('worker:greeting', 'Good morning')} 👋</h1>
+              <span className="badge badge-verified text-xs px-2.5 py-0.5 font-bold">
+                <ShieldCheck className="w-3.5 h-3.5" /> {t('common:status.verified', 'Verified Worker')}
               </span>
             </div>
-            <p className="text-xs font-bold text-primary">{worker.primaryTrade}</p>
-            <p className="text-[11px] text-muted flex items-center gap-1 mt-0.5">
-              <MapPin className="w-3 h-3" /> {worker.location} • {t('worker:immediateJoining', 'Available Now')}
+            <p className="text-sm font-semibold text-primary mt-0.5">{worker.primaryTrade}</p>
+            <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+              <MapPin className="w-3.5 h-3.5 text-slate-400" /> {worker.location} • {t('worker:immediateJoining', 'Available Now')}
             </p>
           </div>
         </div>
 
         {/* Quick Action Shortcuts */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
           <button
             onClick={onOpenVoiceModal}
-            className="btn btn-outline-primary btn-sm flex items-center gap-1"
+            className="btn btn-outline-primary btn-sm flex items-center gap-1.5 text-xs font-semibold px-4 py-2.5 rounded-xl"
           >
-            <Mic className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+            <Mic className="w-4 h-4 text-blue-600 animate-pulse" />
             {t('navigation:voiceSearch', 'Voice Search')}
           </button>
           <button
             onClick={() => onNavigate('/worker/jobs')}
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary btn-sm flex items-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm"
           >
             {t('navigation:jobs', 'Find Jobs')}
           </button>
@@ -107,51 +110,75 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
       </div>
 
       {/* Profile Strength & Trust Score Overview Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Profile Strength Card (4 cols) */}
-        <div className="lg:col-span-4 kc-card p-4 sm:p-5 bg-white border flex flex-col justify-between">
+        <div className="lg:col-span-4 kc-card p-6 sm:p-7 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all">
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {t('worker:profileStrength', 'Profile Strength')}
               </span>
-              <span className="text-xs font-black text-primary">{worker.profileStrengthPercent}%</span>
+              <span className="text-sm font-black text-primary">{worker.profileStrengthPercent}%</span>
             </div>
-            <div className="match-bar-track mb-2.5">
-              <div className="match-bar-fill" style={{ width: `${worker.profileStrengthPercent}%` }} />
+            <div className="match-bar-track mb-3 h-2.5 rounded-full bg-slate-100">
+              <div className="match-bar-fill h-full rounded-full bg-primary" style={{ width: `${worker.profileStrengthPercent}%` }} />
             </div>
-            <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
               {t('worker:unlockJobsTip', 'Complete your profile, certifications and work proof to help employers assess your experience.')}
             </p>
 
-            <div className="space-y-1.5 text-xs">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="flex items-center gap-1.5 text-slate-700 text-[11px] font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {t('verification:factors.identity', 'Aadhaar Biometric')}
+            <div className="space-y-2.5 text-xs">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 border border-slate-100">
+                <span className="flex items-center gap-2 text-slate-700 text-xs font-medium">
+                  <CheckCircle2 className={`w-4 h-4 ${store.currentUser?.isVerified ? 'text-emerald-600' : 'text-slate-300'}`} /> {t('verification:factors.identity', 'Aadhaar eKYC')}
                 </span>
-                <span className="badge badge-verified text-[9px]">{t('common:status.verified', 'Verified')}</span>
+                {store.currentUser?.isVerified ? (
+                  <span className="badge badge-verified text-xs font-bold">{worker.aadhaarMasked ? `Verified (${worker.aadhaarMasked.slice(-4)})` : t('common:status.verified', 'Verified')}</span>
+                ) : (
+                  <button
+                    onClick={() => setShowDigiLockerModal(true)}
+                    className="badge text-xs bg-blue-100 text-primary border border-blue-300 hover:bg-blue-200 transition-colors font-bold cursor-pointer"
+                  >
+                    Verify via DigiLocker +20 Pts
+                  </button>
+                )}
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="flex items-center gap-1.5 text-slate-700 text-[11px] font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {t('verification:factors.certifications', 'ITI NCVT Diploma')}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 border border-slate-100">
+                <span className="flex items-center gap-2 text-slate-700 text-xs font-medium">
+                  <CheckCircle2 className={`w-4 h-4 ${worker.certifications.length > 0 ? 'text-emerald-600' : 'text-slate-300'}`} /> {t('verification:factors.certifications', 'ITI NCVT Diploma')}
                 </span>
-                <span className="badge badge-verified text-[9px]">{t('common:status.verified', 'Verified')}</span>
+                <span className={`badge text-xs ${worker.certifications.length > 0 ? 'badge-verified' : 'badge-neutral'}`}>
+                  {worker.certifications.length > 0 ? t('common:status.verified', 'Verified') : 'Pending'}
+                </span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="flex items-center gap-1.5 text-slate-700 text-[11px] font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {t('verification:factors.proofOfWork', 'Proof of Work')}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50/80 border border-slate-100">
+                <span className="flex items-center gap-2 text-slate-700 text-xs font-medium">
+                  <CheckCircle2 className={`w-4 h-4 ${worker.proofOfWork.length > 0 ? 'text-emerald-600' : 'text-slate-300'}`} /> {t('verification:factors.proofOfWork', 'Proof of Work')}
                 </span>
-                <span className="badge badge-verified text-[9px]">{t('common:status.approved', 'Approved')}</span>
+                <span className={`badge text-xs ${worker.proofOfWork.length > 0 ? 'badge-verified' : 'badge-neutral'}`}>
+                  {worker.proofOfWork.length > 0 ? t('common:status.approved', 'Approved') : 'Pending'}
+                </span>
               </div>
             </div>
           </div>
 
-          <button
-            onClick={() => onNavigate('/worker/profile')}
-            className="btn btn-secondary btn-sm w-full mt-3 flex items-center justify-center gap-1 text-[11px]"
-          >
-            {t('worker:tabs.overview', 'Edit Digital Identity')} <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="space-y-2 mt-5">
+            {!store.currentUser?.isVerified && (
+              <button
+                onClick={() => setShowDigiLockerModal(true)}
+                className="btn btn-primary btn-sm w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 rounded-xl shadow-xs"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Verify Identity with DigiLocker
+              </button>
+            )}
+            <button
+              onClick={() => onNavigate('/worker/profile')}
+              className="btn btn-secondary btn-sm w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 rounded-xl"
+            >
+              {t('worker:tabs.overview', 'Edit Digital Identity')} <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Trust Score 100-pt Widget (8 cols) */}
@@ -190,17 +217,17 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
 
       {/* Upcoming Scheduled Interviews Section */}
       {upcomingInterviews.length > 0 && (
-        <div className="kc-card p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-200">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center">
-                <Clock className="w-4 h-4" />
+        <div className="kc-card p-6 sm:p-7 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
+                <Clock className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-black text-navy">
+                <h3 className="text-base font-bold text-navy">
                   📅 {t('worker:upcomingInterviews', 'Upcoming Scheduled Interviews & Trade Tests')}
                 </h3>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {t('applications:statusStages.interview', 'Confirmed interview appointments with employer plant supervisors')}
                 </p>
               </div>
@@ -213,42 +240,42 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
             </button>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {upcomingInterviews.map((app) => {
               const iv = app.interview;
               if (!iv) return null;
               return (
                 <div
                   key={app.id}
-                  className="p-3 rounded-xl bg-white border border-blue-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3"
+                  className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-all"
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="badge badge-success text-[10px] uppercase font-bold py-0.5">
+                      <span className="badge badge-success text-xs font-bold py-0.5">
                         {iv.type || 'Trade Test'}
                       </span>
-                      <span className="text-xs font-black text-navy">{app.jobTitle}</span>
-                      <span className="text-[11px] text-muted">• {app.companyName}</span>
+                      <span className="text-sm font-black text-navy">{app.jobTitle}</span>
+                      <span className="text-xs text-slate-500">• {app.companyName}</span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600">
-                      <span className="flex items-center gap-1 font-semibold text-blue-900">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                      <span className="flex items-center gap-1.5 font-semibold text-blue-900">
                         <Clock className="w-3.5 h-3.5 text-blue-600" /> {iv.date} at {iv.time}
                       </span>
-                      <span className="flex items-center gap-1 text-slate-600">
+                      <span className="flex items-center gap-1.5 text-slate-600">
                         <MapPin className="w-3.5 h-3.5 text-slate-400" /> {iv.locationOrLink || 'Plant Workshop'}
                       </span>
                     </div>
                     {iv.instructions && (
-                      <p className="text-[10px] text-amber-800 bg-amber-50/80 px-2 py-1 rounded border border-amber-200/60 inline-block mt-1">
+                      <p className="text-xs text-amber-900 bg-amber-50/80 px-2.5 py-1.5 rounded-lg border border-amber-200/80 inline-block mt-1">
                         <strong>Instructions:</strong> {iv.instructions}
                       </p>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 self-end md:self-auto">
+                  <div className="flex items-center gap-2 self-start md:self-auto">
                     <button
                       onClick={() => onNavigate('/worker/applications')}
-                      className="btn btn-outline-primary btn-sm text-[11px]"
+                      className="btn btn-outline-primary btn-sm text-xs font-semibold px-3.5 py-2 rounded-xl"
                     >
                       {t('applications:timeline.title', 'Track Status')}
                     </button>
@@ -405,6 +432,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ onNavigate, on
           onClose={() => setSelectedMatch(null)}
         />
       )}
+
+      {/* DigiLocker eKYC Modal */}
+      <DigiLockerModal
+        isOpen={showDigiLockerModal}
+        onClose={() => setShowDigiLockerModal(false)}
+      />
     </div>
   );
 };

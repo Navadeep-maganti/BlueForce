@@ -87,58 +87,58 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({ onNavigate
   };
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 p-3.5 rounded-xl bg-navy-900 text-white shadow-xl flex items-center gap-2.5 border border-emerald-500 animate-slideUp">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-semibold">{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-navy-900 text-white shadow-2xl flex items-center gap-3 border border-emerald-500 animate-slideUp">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <span className="text-sm font-semibold">{toastMessage}</span>
         </div>
       )}
 
       {/* Top Welcome Header */}
-      <div className="kc-card p-4 sm:p-5 bg-white border flex flex-col md:flex-row md:items-center justify-between gap-3.5">
-        <div className="flex items-center gap-3.5">
+      <div className="kc-card p-6 sm:p-7 bg-white border border-slate-200/80 shadow-xs rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-center gap-4">
           <img
             src={employer.logoUrl}
             alt={employer.companyName}
-            className="w-12 h-12 rounded-xl object-cover border border-slate-200 flex-shrink-0 shadow-2xs"
-            style={{ width: '48px', height: '48px', minWidth: '48px', maxWidth: '48px' }}
+            className="w-14 h-14 rounded-2xl object-cover border border-slate-200/80 flex-shrink-0 shadow-xs"
+            style={{ width: '56px', height: '56px', minWidth: '56px', maxWidth: '56px' }}
           />
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-black text-navy">{employer.companyName}</h1>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-black text-navy tracking-tight">{employer.companyName}</h1>
               {employer.isVerified && (
-                <span className="badge badge-verified text-[10px] py-0">
-                  <ShieldCheck className="w-3 h-3" /> {employer.verificationBadge || 'Verified Enterprise'}
+                <span className="badge badge-verified text-xs px-2.5 py-0.5 font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5" /> {employer.verificationBadge || 'Verified Enterprise'}
                 </span>
               )}
             </div>
-            <p className="text-xs font-bold text-primary">{employer.tradeIndustry}</p>
-            <p className="text-[11px] text-muted flex items-center gap-1 mt-0.5">
-              <MapPin className="w-3 h-3" /> {employer.location} • {employer.gstOrCinNumber}
+            <p className="text-sm font-semibold text-primary mt-0.5">{employer.tradeIndustry}</p>
+            <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+              <MapPin className="w-3.5 h-3.5 text-slate-400" /> {employer.location} • {employer.gstOrCinNumber}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end md:self-auto">
+        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
           <button
             onClick={() => setShowEditModal(true)}
-            className="btn btn-secondary btn-sm flex items-center gap-1 text-xs"
+            className="btn btn-secondary btn-sm flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl"
           >
             <Edit3 className="w-3.5 h-3.5 text-slate-600" />
             Edit Profile
           </button>
           <button
             onClick={() => onNavigate('/employer/candidates')}
-            className="btn btn-outline-primary btn-sm flex items-center gap-1 text-xs"
+            className="btn btn-outline-primary btn-sm flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl"
           >
             <Users className="w-3.5 h-3.5" />
             {t('employer:candidateSearch', 'Find Candidates')}
           </button>
           <button
             onClick={() => onNavigate('/employer/jobs/new')}
-            className="btn btn-primary btn-sm flex items-center gap-1 text-xs"
+            className="btn btn-primary btn-sm flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             {t('employer:postNewJob', 'Post a Job')}
@@ -147,85 +147,85 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({ onNavigate
       </div>
 
       {/* Overview Stat Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
-        <div className="kc-card p-4 bg-white border flex flex-col justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="kc-card p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {t('employer:activeJobs', 'Active Openings')}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-primary flex items-center justify-center">
-              <Briefcase className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
+              <Briefcase className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-2xl font-black text-navy">{activeJobsCount}</span>
-            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
+          <div className="mt-3">
+            <span className="text-3xl font-black text-navy tracking-tight">{activeJobsCount}</span>
+            <span className="text-xs text-emerald-600 font-semibold block mt-1">
               +1 {t('common:status.published', 'published this week')}
             </span>
           </div>
         </div>
 
-        <div className="kc-card p-4 bg-white border flex flex-col justify-between">
+        <div className="kc-card p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {t('employer:totalApplications', 'Applicants')}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Users className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-2xl font-black text-navy">{totalAppsCount}</span>
-            <span className="text-[10px] text-muted block mt-0.5">{t('common:status.justNow', 'Direct verified candidates')}</span>
+          <div className="mt-3">
+            <span className="text-3xl font-black text-navy tracking-tight">{totalAppsCount}</span>
+            <span className="text-xs text-slate-500 block mt-1">{t('common:status.justNow', 'Direct verified candidates')}</span>
           </div>
         </div>
 
-        <div className="kc-card p-4 bg-white border flex flex-col justify-between">
+        <div className="kc-card p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {t('employer:shortlisted', 'Shortlisted')}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Award className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Award className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-2xl font-black text-navy">{shortlistedCount}</span>
-            <span className="text-[10px] text-amber-600 font-bold block mt-0.5">
+          <div className="mt-3">
+            <span className="text-3xl font-black text-navy tracking-tight">{shortlistedCount}</span>
+            <span className="text-xs text-amber-600 font-semibold block mt-1">
               {t('employer:inReview', 'In review')}
             </span>
           </div>
         </div>
 
-        <div className="kc-card p-4 bg-white border flex flex-col justify-between">
+        <div className="kc-card p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {t('employer:interviews', 'Interviews')}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Calendar className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Calendar className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-2xl font-black text-navy">{interviewCount}</span>
-            <span className="text-[10px] text-blue-600 font-bold block mt-0.5">
+          <div className="mt-3">
+            <span className="text-3xl font-black text-navy tracking-tight">{interviewCount}</span>
+            <span className="text-xs text-blue-600 font-semibold block mt-1">
               {t('employer:upcomingInterviews', 'Scheduled')}
             </span>
           </div>
         </div>
 
-        <div className="kc-card p-4 bg-white border flex flex-col justify-between col-span-2 lg:col-span-1">
+        <div className="kc-card p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between col-span-2 lg:col-span-1 shadow-xs hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {t('employer:hired', 'Selected / Hired')}
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <span className="text-2xl font-black text-navy">{hiredCount}</span>
-            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
+          <div className="mt-3">
+            <span className="text-3xl font-black text-navy tracking-tight">{hiredCount}</span>
+            <span className="text-xs text-emerald-600 font-semibold block mt-1">
               {t('employer:completedHires', 'Plant onboarded')}
             </span>
           </div>
@@ -233,63 +233,63 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({ onNavigate
       </div>
 
       {/* Main Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Top Matching Candidates (7 cols) */}
-        <div className="lg:col-span-7 space-y-3.5">
+        <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-navy flex items-center gap-1.5">
+              <h2 className="text-base font-bold text-navy flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
                 {t('employer:topCandidates', 'Top Matching Candidates')}
               </h2>
-              <p className="text-[11px] text-muted">
+              <p className="text-xs text-slate-500 mt-0.5">
                 {t('employer:topCandidatesDesc', 'AI matched based on trade certifications, verified experience, and 100-pt Trust Score.')}
               </p>
             </div>
             <button
               onClick={() => onNavigate('/employer/candidates')}
-              className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5"
+              className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
             >
               {t('common:actions.viewAll', 'View all')} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {candidates.slice(0, 3).map((candidate) => (
               <div
                 key={candidate.id}
-                className="kc-card p-4 bg-white border flex flex-col sm:flex-row sm:items-center justify-between gap-3 kc-card-hover"
+                className="kc-card p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 kc-card-hover"
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3.5">
                   <img
                     src={candidate.avatarUrl}
                     alt={candidate.fullName}
-                    className="w-12 h-12 rounded-xl object-cover border border-slate-200 flex-shrink-0 shadow-2xs"
-                    style={{ width: '48px', height: '48px', minWidth: '48px', maxWidth: '48px', objectFit: 'cover' }}
+                    className="w-13 h-13 rounded-2xl object-cover border border-slate-200/80 flex-shrink-0 shadow-xs"
+                    style={{ width: '52px', height: '52px', minWidth: '52px', maxWidth: '52px', objectFit: 'cover' }}
                   />
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-xs sm:text-sm text-navy">{candidate.fullName}</h3>
-                      <span className="badge badge-verified text-[9px] py-0">
-                        <ShieldCheck className="w-3 h-3" /> {candidate.trustScore.total} {t('common:badges.trustScore', 'Trust')}
+                      <h3 className="font-bold text-sm sm:text-base text-navy">{candidate.fullName}</h3>
+                      <span className="badge badge-verified text-xs py-0.5">
+                        <ShieldCheck className="w-3.5 h-3.5" /> {candidate.trustScore.total} {t('common:badges.trustScore', 'Trust')}
                       </span>
                     </div>
-                    <p className="text-xs font-semibold text-primary">{candidate.primaryTrade}</p>
-                    <p className="text-[11px] text-muted flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 text-slate-400" /> {candidate.location} •{' '}
+                    <p className="text-xs font-semibold text-primary mt-0.5">{candidate.primaryTrade}</p>
+                    <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" /> {candidate.location} •{' '}
                       {candidate.yearsOfExperience}y {t('worker:experience', 'experience')}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 pt-2 sm:pt-0 border-t sm:border-t-0">
+                <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2.5 pt-3 sm:pt-0 border-t sm:border-t-0">
                   <div className="text-right">
-                    <span className="text-xs font-black text-emerald-700">{candidate.profileStrengthPercent}% Match</span>
-                    <span className="text-[10px] text-muted block">₹{candidate.expectedSalaryMonthly.min.toLocaleString()}+</span>
+                    <span className="text-sm font-black text-emerald-700">{candidate.profileStrengthPercent}% Match</span>
+                    <span className="text-xs text-slate-500 block">₹{candidate.expectedSalaryMonthly.min.toLocaleString()}+</span>
                   </div>
                   <button
                     onClick={() => onNavigate('/employer/candidates')}
-                    className="btn btn-secondary btn-sm text-[11px]"
+                    className="btn btn-secondary btn-sm text-xs font-bold px-3.5 py-1.5 rounded-xl"
                   >
                     {t('common:actions.viewDetails', 'View Profile')}
                   </button>
@@ -300,40 +300,40 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({ onNavigate
         </div>
 
         {/* Right Column: Active Job Openings (5 cols) */}
-        <div className="lg:col-span-5 space-y-3.5">
+        <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-navy flex items-center gap-1.5">
+            <h2 className="text-base font-bold text-navy flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-primary" />
               {t('employer:activeJobs', 'Active Job Openings')}
             </h2>
             <button
               onClick={() => onNavigate('/employer/jobs/new')}
-              className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5"
+              className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
             >
               + {t('employer:postNewJob', 'Post New')}
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {jobs.slice(0, 3).map((job) => (
-              <div key={job.id} className="kc-card p-3.5 bg-white border space-y-2">
+              <div key={job.id} className="kc-card p-5 bg-white border border-slate-200/80 rounded-2xl space-y-3 shadow-xs hover:shadow-md transition-all">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="font-bold text-xs text-navy line-clamp-1">{job.title}</h3>
-                    <p className="text-[11px] text-muted">
+                    <h3 className="font-bold text-sm text-navy line-clamp-1">{job.title}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {job.tradeCategory} • {job.openings} {t('jobs:jobCard.openings', 'Openings')}
                     </p>
                   </div>
-                  <span className="badge badge-success text-[9px]">{t('common:status.active', 'Active')}</span>
+                  <span className="badge badge-success text-xs py-0.5">{t('common:status.active', 'Active')}</span>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t text-[11px] text-slate-600">
-                  <span>
+                <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs text-slate-600">
+                  <span className="font-semibold">
                     ₹{job.salaryMin.toLocaleString()} – ₹{job.salaryMax.toLocaleString()}
                   </span>
                   <button
                     onClick={() => onNavigate('/employer/pipeline')}
-                    className="text-primary font-bold hover:underline text-[11px]"
+                    className="text-primary font-bold hover:underline text-xs flex items-center gap-0.5"
                   >
                     {t('employer:viewPipeline', 'View Pipeline →')}
                   </button>

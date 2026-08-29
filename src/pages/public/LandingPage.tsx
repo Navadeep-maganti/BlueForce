@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   Building2,
+  CheckCircle2,
   ChevronRight,
   Globe2,
   MapPin,
@@ -110,102 +111,98 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenVoic
                 <ArrowRight size={18} />
               </button>
             </div>
-          </div>
-
-          {/* Platform Verified Credential Showcase Card */}
-          <div className="talent-preview" aria-label="Example verified worker profile">
+          </div>          {/* Platform Trust & Ecosystem Showcase Card */}
+          <div className="talent-preview space-y-4" aria-label="BlueForce Trust Ecosystem">
             <div className="talent-preview__topline">
-              <span>
-                <span className="live-dot" /> {t('worker:immediateJoining', 'AVAILABLE NOW')}
+              <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                <span className="live-dot" /> LIVE WORKFORCE NETWORK
               </span>
-              <span>{t('worker:verifiedBadge', 'Verified Credential')}</span>
+              <span className="badge badge-verified text-[10px] py-0.5 px-2 font-bold flex items-center gap-1">
+                <ShieldCheck size={13} /> NSDC Recognized
+              </span>
             </div>
-            <div className="talent-preview__person">
-              <div className="talent-avatar" style={{ width: '48px', height: '48px', minWidth: '48px', maxWidth: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #1e40af, #3b82f6)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                KC
+
+            {/* 3 Core Platform Pillars */}
+            <div className="space-y-2.5">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-3 hover:bg-blue-50/50 hover:border-blue-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <ShieldCheck size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-navy">100-Point Portable Trust Score</h3>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    Instant DigiLocker eKYC, NCVT diplomas, and foreman-rated project proofs.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2>
-                  Certified Technician <BadgeCheck size={18} className="text-blue-500" />
-                </h2>
-                <p>Industrial Electrician & Automation</p>
-                <p className="talent-preview__location">
-                  <MapPin size={14} /> Visakhapatnam, AP · 4 yrs experience
-                </p>
+
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-3 hover:bg-blue-50/50 hover:border-blue-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Mic size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-navy">Multilingual Voice Discovery</h3>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    Natural speech search in Telugu, Hindi & English for fast job and trade matching.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-3 hover:bg-blue-50/50 hover:border-blue-200 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <BriefcaseBusiness size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-navy">Direct Plant Hiring (₹0 Comm.)</h3>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    Hire verified technicians with zero middleman commissions or delays.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="talent-preview__score">
-              <div>
-                <span>{t('employer:matchScore', 'Trust Score')}</span>
-                <strong>94/100</strong>
-                <small>{t('common:badges.highMatch', 'Aadhaar eKYC + NSDC Certified')}</small>
+            <div className="talent-preview__stats">
+              <div className="talent-preview__stat">
+                <span className="talent-preview__stat-val">12,480+</span>
+                <span className="talent-preview__stat-lbl">Audited Trades</span>
               </div>
-              <div className="score-ring">
-                <span>94</span>
+              <div className="talent-preview__stat">
+                <span className="talent-preview__stat-val">4.2 Days</span>
+                <span className="talent-preview__stat-lbl">Avg Time-to-Hire</span>
               </div>
-            </div>
-
-            <div className="talent-preview__skills">
-              <span>Panel wiring</span>
-              <span>PLC Automation</span>
-              <span>Preventive maintenance</span>
-            </div>
-
-            <div className="talent-preview__proof">
-              <p>
-                <ShieldCheck size={17} />
-                <span>
-                  <strong>{t('common:badges.verifiedWorker', 'Direct Verified Hire')}</strong>
-                  <small>{t('verification:verifiedBadge', 'Identity, trade certificate & work proof checked')}</small>
-                </span>
-              </p>
-              <button onClick={() => setShowMatchModal(true)}>
-                {t('jobs:jobDetails.matchAnalysis', 'Why this match?')} <ChevronRight size={15} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Proof metrics bar */}
-        <div className="landing-proof">
-          <div className="landing-shell landing-proof__grid">
-            <div>
-              <strong>12,400+</strong>
-              <span>{t('common:hero.stat1Label', 'Verified blue-collar workers')}</span>
-            </div>
-            <div>
-              <strong>850+</strong>
-              <span>{t('common:hero.stat2Label', 'Industrial employers hiring')}</span>
-            </div>
-            <div>
-              <strong>4.2 Days</strong>
-              <span>{t('common:hero.stat3Label', 'Average time-to-hire')}</span>
-            </div>
-            <div>
-              <strong>100%</strong>
-              <span>{t('common:hero.stat4Label', 'Direct hiring, ₹0 commission')}</span>
+              <div className="talent-preview__stat">
+                <span className="talent-preview__stat-val">94.8%</span>
+                <span className="talent-preview__stat-lbl">Pass Rate</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Pillars */}
-      <section className="landing-section">
-        <div className="landing-shell">
-          <div className="section-head">
-            <span className="eyebrow">{t('common:features.badge', 'Built for trust & clarity')}</span>
-            <h2>{t('common:features.title', 'Everything workers & employers need in one unified ecosystem')}</h2>
+      {/* Core Platform Features Section */}
+      <section className="section-padded">
+        <div className="section-inner">
+          <div className="section-header">
+            <h2>{t('common:features.title', 'Platform Capabilities')}</h2>
+            <p>
+              {t(
+                'common:features.subtitle',
+                'Built for transparency, speed, and real-world trade reliability.'
+              )}
+            </p>
           </div>
 
-          <div className="landing-cards">
+          <div className="features-grid">
             <div className="feature-card">
               <div className="feature-card__icon">
                 <ShieldCheck size={26} />
               </div>
-              <h3>{t('verification:title', '100-Point Antigravity Trust Score')}</h3>
+              <h3>{t('verification:title', '100-Point Trust Score')}</h3>
               <p>
-                {t('verification:subtitle', 'Aadhaar identity, NSDC trade certificates, tested technical skills, and verified past-employer work proofs combined into one transparent rating.')}
+                {t(
+                  'verification:subtitle',
+                  'Every worker gets a portable trust profile combining Aadhaar identity, NCVT trade diplomas, past plant tenures, and peer-reviewed work proofs.'
+                )}
               </p>
             </div>
 
@@ -213,7 +210,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenVoic
               <div className="feature-card__icon">
                 <Mic size={26} />
               </div>
-              <h3>{t('jobs:voiceModal.title', 'Kaushal Voice Discovery')}</h3>
+              <h3>{t('jobs:voiceModal.title', 'BlueForce Voice Discovery')}</h3>
               <p>
                 {t('jobs:voiceModal.listening', 'Search for local plant and workshop jobs in Telugu, Hindi, or English by speaking naturally. No complex typing required.')}
               </p>

@@ -141,9 +141,9 @@ export const KaushalVoiceSearch: React.FC<KaushalVoiceSearchProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <h2 id="kaushal-voice-title" className="text-sm font-black text-navy dark:text-white">
-                  Kaushal Voice
+                  BlueForce Voice Assistant
                 </h2>
-                <span className="badge badge-primary text-[9px] py-0">Voice Assist</span>
+                <span className="badge badge-primary text-[9px] py-0 font-bold">Multilingual</span>
               </div>
               <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
                 <Globe2 size={11} className="text-blue-500" />

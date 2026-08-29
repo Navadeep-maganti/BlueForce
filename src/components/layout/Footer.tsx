@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
               <ShieldCheck size={19} />
             </span>
             <span>
-              Kaushal<b>Connect</b>
+              Blue<b>Force</b>
             </span>
           </div>
           <p>
@@ -110,7 +110,7 @@ export const Footer: React.FC = () => {
         <span>
           {t('navigation:footer.copyright', {
             year: new Date().getFullYear(),
-            defaultValue: '© 2026 KaushalConnect Workforce Technologies. All rights reserved.',
+            defaultValue: '© 2026 BlueForce Technologies. All rights reserved.',
           })}
         </span>
         <span>{t('navigation:footer.proudlyMadeInIndia', "Proudly built for India's skilled workforce 🇮🇳")}</span>

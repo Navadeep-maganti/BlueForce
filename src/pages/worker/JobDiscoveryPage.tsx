@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Sparkles,
   SlidersHorizontal,
+  X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
@@ -35,7 +36,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [minSalary, setMinSalary] = useState<number>(initialSearch?.minSalary || 0);
   const [selectedShift, setSelectedShift] = useState('all');
-  const [maxDistance, setMaxDistance] = useState<number>(100);
+  const [maxDistance, setMaxDistance] = useState<number>(500);
 
   const [selectedMatch, setSelectedMatch] = useState<{ match: JobMatchBreakdown; title: string; company: string } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -65,28 +66,48 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
   };
 
   const filteredJobs = jobs.filter((job) => {
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
+    
+    // Multi-token search across all fields
+    const queryWords = query ? query.split(/\s+/).filter(Boolean) : [];
     const matchesQuery =
-      !query ||
-      job.title.toLowerCase().includes(query) ||
-      job.tradeCategory.toLowerCase().includes(query) ||
-      job.requiredSkills.some((s) => s.toLowerCase().includes(query)) ||
-      job.companyName.toLowerCase().includes(query);
+      queryWords.length === 0 ||
+      queryWords.every((word) => {
+        return (
+          job.title.toLowerCase().includes(word) ||
+          job.tradeCategory.toLowerCase().includes(word) ||
+          job.companyName.toLowerCase().includes(word) ||
+          job.city.toLowerCase().includes(word) ||
+          job.location.toLowerCase().includes(word) ||
+          job.description.toLowerCase().includes(word) ||
+          job.requiredSkills.some((s) => s.toLowerCase().includes(word)) ||
+          (job.preferredSkills && job.preferredSkills.some((s) => s.toLowerCase().includes(word))) ||
+          (job.requiredCertifications && job.requiredCertifications.some((c) => c.toLowerCase().includes(word)))
+        );
+      });
 
     const matchesLocation =
+      !selectedLocation ||
       selectedLocation === 'all' ||
-      job.city.toLowerCase().includes(selectedLocation.toLowerCase()) ||
+      job.city.toLowerCase() === selectedLocation.toLowerCase() ||
       job.location.toLowerCase().includes(selectedLocation.toLowerCase());
 
     const matchesCategory =
+      !selectedCategory ||
       selectedCategory === 'all' ||
-      job.tradeCategory.toLowerCase().includes(selectedCategory.toLowerCase());
+      job.tradeCategory.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+      (selectedCategory === 'Electrical' && job.tradeCategory.toLowerCase().includes('electric')) ||
+      (selectedCategory === 'Solar' && job.tradeCategory.toLowerCase().includes('solar')) ||
+      (selectedCategory === 'Machining' && (job.tradeCategory.toLowerCase().includes('machin') || job.tradeCategory.toLowerCase().includes('tooling') || job.tradeCategory.toLowerCase().includes('cnc'))) ||
+      (selectedCategory === 'Welding' && (job.tradeCategory.toLowerCase().includes('weld') || job.tradeCategory.toLowerCase().includes('fabricat'))) ||
+      (selectedCategory === 'Automotive' && (job.tradeCategory.toLowerCase().includes('auto') || job.tradeCategory.toLowerCase().includes('diesel') || job.tradeCategory.toLowerCase().includes('fleet')));
 
-    const matchesSalary = minSalary === 0 || job.salaryMin >= minSalary;
+    const matchesSalary = !minSalary || minSalary === 0 || job.salaryMin >= minSalary;
 
-    const matchesShift = selectedShift === 'all' || job.shift === selectedShift;
+    const matchesShift = !selectedShift || selectedShift === 'all' || job.shift === selectedShift;
 
-    const matchesDistance = !job.distanceKm || job.distanceKm <= maxDistance;
+    const matchesDistance =
+      selectedLocation !== 'all' || maxDistance >= 500 || !job.distanceKm || job.distanceKm <= maxDistance;
 
     return (
       matchesQuery &&
@@ -97,6 +118,12 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
       matchesDistance
     );
   });
+
+  const activeFiltersCount =
+    (selectedCategory !== 'all' ? 1 : 0) +
+    (selectedLocation !== 'all' ? 1 : 0) +
+    (minSalary > 0 ? 1 : 0) +
+    (selectedShift !== 'all' ? 1 : 0);
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
@@ -109,26 +136,36 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
       )}
 
       {/* Top Search Banner */}
-      <div className="kc-card p-4 bg-white border">
-        <div className="flex flex-col md:flex-row items-center gap-2.5">
-          {/* Main Keyword Input */}
-          <div className="relative flex-1 w-full">
+      <div className="kc-card p-4 sm:p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
+        <div className="job-search-toolbar">
+          {/* Main Keyword Input - Expanded & Prominent */}
+          <div className="job-search-input-wrap">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('jobs:searchPlaceholder', 'Search by trade, title, or machine skill...')}
-              className="form-input text-xs pl-8 pr-3 py-2"
+              placeholder={t('jobs:searchPlaceholder', 'Search trade, skill, or job title (e.g. Electrician, CNC, Welder)...')}
+              className="form-input text-xs sm:text-sm pl-9 pr-8 py-2.5 w-full rounded-xl"
             />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Location Selector */}
-          <div className="w-full md:w-48">
+          <div className="job-search-location-wrap">
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="form-select text-xs py-2"
+              className="form-select text-xs sm:text-sm py-2.5 px-3 w-full rounded-xl font-medium text-slate-700"
             >
               <option value="all">📍 {t('jobs:allLocations', 'All Locations')}</option>
               <option value="Vijayawada">Vijayawada, AP</option>
@@ -139,23 +176,35 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
             </select>
           </div>
 
-          {/* Voice Search Button */}
-          <button
-            onClick={onOpenVoiceModal}
-            className="btn btn-outline-primary py-2 px-3 text-xs font-semibold flex items-center gap-1.5 w-full md:w-auto justify-center"
-          >
-            <Mic className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-            {t('navigation:voiceSearch', 'Voice Search')}
-          </button>
+          {/* Buttons Wrap */}
+          <div className="job-search-btn-wrap">
+            {/* Voice Search Button */}
+            <button
+              onClick={onOpenVoiceModal}
+              className="btn btn-outline-primary py-2.5 px-3.5 text-xs font-bold flex items-center gap-1.5 rounded-xl justify-center shadow-2xs"
+            >
+              <Mic className="w-4 h-4 text-primary animate-pulse" />
+              <span>{t('navigation:voiceSearch', 'Voice Search')}</span>
+            </button>
 
-          {/* Mobile Filter Toggle */}
-          <button
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="btn btn-secondary py-2 px-2.5 text-xs md:hidden flex items-center gap-1 w-full justify-center"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            {t('common:actions.filter', 'Filters')} {minSalary > 0 || selectedCategory !== 'all' ? '●' : ''}
-          </button>
+            {/* Filter Toggle Button */}
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className={`btn py-2.5 px-3.5 text-xs font-bold flex items-center gap-1.5 rounded-xl justify-center transition-all ${
+                activeFiltersCount > 0
+                  ? 'btn-primary shadow-xs'
+                  : 'btn-secondary text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{t('common:actions.filter', 'Filters')}</span>
+              {activeFiltersCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-white text-primary text-[10px] font-black flex items-center justify-center ml-0.5">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -221,10 +270,10 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="text-[11px] font-bold text-slate-700">
-                {t('jobs:filterBySalary', 'Min Monthly Pay')}
+                {t('jobs:filterBySalary', 'Minimum Monthly Salary')}
               </label>
               <span className="text-[11px] font-bold text-emerald-700">
-                {minSalary === 0 ? t('jobs:anyExperience', 'Any') : `₹${minSalary.toLocaleString()}+`}
+                {minSalary === 0 ? 'Any Pay' : `₹${minSalary.toLocaleString()}+`}
               </span>
             </div>
             <input
@@ -237,7 +286,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
               className="w-full accent-primary h-1.5"
             />
             <div className="flex justify-between text-[9px] text-muted">
-              <span>{t('jobs:anyExperience', 'Any')}</span>
+              <span>Any Pay</span>
               <span>₹20k</span>
               <span>₹30k</span>
               <span>₹35k+</span>

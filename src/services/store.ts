@@ -295,7 +295,13 @@ class Store {
           this.employerProfile = data.employerProfile || createCleanEmployerProfile(this.currentUser!);
           this.applications = data.applications || [];
         }
-        this.notifications = data.notifications || [];
+        const rawNotifs: NotificationItem[] = data.notifications || [];
+        this.notifications = rawNotifs.map((n) => ({
+          ...n,
+          title: n.title ? n.title.replace(/KaushalConnect/gi, 'BlueForce').replace(/Kaushal/gi, 'BlueForce') : n.title,
+          message: n.message ? n.message.replace(/KaushalConnect/gi, 'BlueForce').replace(/Kaushal/gi, 'BlueForce') : n.message,
+        }));
+        this.saveCurrentUserData();
       } else {
         // If this is a mock user, load mock data, otherwise create clean profile!
         const isMockWorker = userId === '1' || userId === 'worker_1';
@@ -322,7 +328,7 @@ class Store {
             {
               id: `notif_${Date.now()}`,
               userId: userId,
-              title: 'Welcome to KaushalConnect',
+              title: 'Welcome to BlueForce',
               message: 'Your account is ready. Complete your profile to boost your workforce trust score.',
               type: 'system',
               timestamp: 'Just now',
@@ -520,7 +526,7 @@ class Store {
         id: `notif_${Date.now()}`,
         userId: newUser.id,
         title: 'Account Created',
-        message: 'Welcome to KaushalConnect. Start adding your skills and work history.',
+        message: 'Welcome to BlueForce. Start adding your skills and work history.',
         type: 'system',
         timestamp: 'Just now',
         isRead: false,
@@ -703,6 +709,98 @@ class Store {
       this.workerProfile
     );
     this.saveCurrentUserData();
+  }
+
+  verifyDigiLockerAadhaar(data: {
+    aadhaarNumber: string;
+    includeNcvtCert?: boolean;
+    tradeName?: string;
+  }): { success: boolean; message: string } {
+    if (!this.currentUser) return { success: false, message: 'User not logged in' };
+
+    const last4 = data.aadhaarNumber.replace(/\D/g, '').slice(-4) || '8921';
+    const masked = `XXXX-XXXX-${last4}`;
+
+    // Mark current user as verified
+    this.currentUser.isVerified = true;
+    const allUsersDbStr = localStorage.getItem(STORAGE_KEYS.ALL_USERS);
+    if (allUsersDbStr) {
+      const allUsers: User[] = JSON.parse(allUsersDbStr);
+      const idx = allUsers.findIndex((u) => u.id === this.currentUser!.id);
+      if (idx >= 0) {
+        allUsers[idx].isVerified = true;
+        localStorage.setItem(STORAGE_KEYS.ALL_USERS, JSON.stringify(allUsers));
+      }
+    }
+
+    const verifiedDocs = [
+      {
+        type: 'Aadhaar eKYC',
+        docName: 'UIDAI Aadhaar Card',
+        docNumber: masked,
+        issuer: 'Unique Identification Authority of India (UIDAI)',
+        verifiedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      },
+    ];
+
+    // If NCVT ITI Certificate was selected during DigiLocker pull
+    if (data.includeNcvtCert) {
+      const ncvtDocNumber = `NCVT-ITI-${Math.floor(100000 + Math.random() * 900000)}`;
+      verifiedDocs.push({
+        type: 'Trade Diploma',
+        docName: `National Trade Certificate (NTC) - ${data.tradeName || this.workerProfile.primaryTrade}`,
+        docNumber: ncvtDocNumber,
+        issuer: 'National Council for Vocational Training (NCVT)',
+        verifiedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      });
+
+      // Add to worker certifications as verified
+      const existingNcvt = this.workerProfile.certifications.some((c) => c.issuingBody.includes('NCVT'));
+      if (!existingNcvt) {
+        this.workerProfile.certifications = [
+          ...this.workerProfile.certifications,
+          {
+            id: `cert_digi_${Date.now()}`,
+            title: `National Trade Certificate (NTC) - ${data.tradeName || this.workerProfile.primaryTrade}`,
+            issuingBody: 'NCVT / Directorate General of Training (DGT)',
+            issueDate: '2023-06-15',
+            credentialId: ncvtDocNumber,
+            verificationStatus: 'verified',
+            verifiedAt: 'Just now',
+          },
+        ];
+      }
+    }
+
+    this.workerProfile.isDigiLockerVerified = true;
+    this.workerProfile.aadhaarMasked = masked;
+    this.workerProfile.digiLockerVerifiedAt = 'Just now';
+    this.workerProfile.digiLockerDocs = verifiedDocs;
+
+    // Recalculate dynamic trust score and profile strength
+    this.workerProfile.trustScore = calculateDynamicTrustScore(this.workerProfile, true);
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(this.workerProfile);
+
+    // Push celebration notification
+    this.notifications = [
+      {
+        id: `notif_${Date.now()}`,
+        userId: this.currentUser.id,
+        title: 'DigiLocker Verification Complete 🎉',
+        message: `Government Aadhaar eKYC verified (${masked}). Trust Score boosted to ${this.workerProfile.trustScore.total}/100!`,
+        type: 'verification',
+        timestamp: 'Just now',
+        isRead: false,
+      },
+      ...this.notifications,
+    ];
+
+    this.saveCurrentUserData();
+    this.notify();
+    return {
+      success: true,
+      message: `DigiLocker eKYC successful! Aadhaar ${masked} verified and Trust Score boosted to ${this.workerProfile.trustScore.total}/100.`,
+    };
   }
 
   // Employer Profile & Job Posting

@@ -120,6 +120,16 @@ export interface WorkerProfile {
     courseUrl?: string;
   }[];
   bookmarkedJobIds: string[];
+  aadhaarMasked?: string;
+  isDigiLockerVerified?: boolean;
+  digiLockerVerifiedAt?: string;
+  digiLockerDocs?: {
+    type: string;
+    docName: string;
+    docNumber: string;
+    issuer: string;
+    verifiedAt: string;
+  }[];
 }
 
 export interface EmployerProfile {
