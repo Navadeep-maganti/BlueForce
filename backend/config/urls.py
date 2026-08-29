@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from apps.workers.views import SkillTaxonomyListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,6 +13,7 @@ urlpatterns = [
     # API v1 Versioning
     path('api/v1/auth/', include('apps.accounts.urls')),
     path('api/v1/workers/', include('apps.workers.urls')),
+    path('api/v1/skills/', SkillTaxonomyListView.as_view(), name='skill-taxonomy-list'),
     path('api/v1/employers/', include('apps.employers.urls')),
     path('api/v1/jobs/', include('apps.jobs.urls')),
     path('api/v1/applications/', include('apps.applications.urls')),

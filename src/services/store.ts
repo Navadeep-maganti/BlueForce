@@ -25,6 +25,7 @@ import {
   mockNotifications,
 } from './mockData';
 import { authApi, RegisterPayload } from './api/authApi';
+import { workerApi } from './api/workerApi';
 
 const STORAGE_KEYS = {
   USER: 'kaushal_current_user',
@@ -138,10 +139,76 @@ class Store {
           isVerified: u.is_verified,
           createdAt: u.created_at,
         };
+        if (u.role === 'worker') {
+          await this.fetchWorkerProfile();
+        }
         this.saveToStorage();
       }
     } catch (err) {
       console.log('Session restore info: working in hybrid/local mode');
+    }
+  }
+
+  async fetchWorkerProfile() {
+    try {
+      const res = await workerApi.getMyProfile();
+      if (res?.success && res?.data) {
+        const d = res.data;
+        if (d.profile) {
+          this.workerProfile.fullName = d.profile.full_name;
+          this.workerProfile.primaryTrade = d.profile.primary_trade;
+          this.workerProfile.tagline = d.profile.tagline || this.workerProfile.tagline;
+          this.workerProfile.bio = d.profile.bio || this.workerProfile.bio;
+          this.workerProfile.location = d.profile.location;
+          this.workerProfile.city = d.profile.city;
+          this.workerProfile.yearsOfExperience = d.profile.years_of_experience;
+          this.workerProfile.availability = d.profile.availability;
+          this.workerProfile.expectedSalaryMonthly = d.profile.expected_salary_min || 28000;
+          this.workerProfile.profileStrengthPercent = d.profile.profile_strength_percent || 88;
+        }
+        if (d.trust_score?.breakdown) {
+          const tb = d.trust_score.breakdown;
+          this.workerProfile.trustScore = {
+            total: d.trust_score.total,
+            identity: { score: tb.identity.score, max: 20, verified: true, label: tb.identity.label },
+            certifications: { score: tb.certifications.score, max: 20, verifiedCount: tb.certifications.verified_count, label: 'Government NCVT Certs' },
+            skills: { score: tb.skills.score, max: 20, testedCount: tb.skills.tested_count, label: 'Verified Trade Tests' },
+            experience: { score: tb.experience.score, max: 15, verifiedYears: tb.experience.verified_years, label: 'Plant Experience' },
+            employerReviews: { score: tb.employer_reviews.score, max: 15, avgRating: tb.employer_reviews.avg_rating, reviewCount: tb.employer_reviews.review_count, label: 'Supervisor Feedback' },
+            completedJobs: { score: tb.completed_jobs.score, max: 10, completedCount: tb.completed_jobs.completed_count, label: 'Photo Proof Works' },
+          };
+        }
+        if (d.skills && d.skills.length > 0) {
+          this.workerProfile.skills = d.skills.map((s: any) => ({
+            id: String(s.id),
+            name: s.skill_name,
+            category: s.category || 'Electrical',
+            level: s.level || 5,
+            yearsExperience: s.years_experience || 4,
+            isVerified: s.is_verified,
+            verificationSource: s.verification_source,
+          }));
+        }
+        if (d.proof_of_work && d.proof_of_work.length > 0) {
+          this.workerProfile.proofOfWork = d.proof_of_work.map((p: any) => ({
+            id: String(p.id),
+            title: p.title,
+            description: p.description,
+            category: p.category,
+            images: p.images || [],
+            skillsDemonstrated: p.skills_demonstrated || [],
+            clientOrEmployer: p.client_or_employer,
+            location: p.location,
+            completionDate: p.completion_date,
+            isVerified: p.is_verified,
+            verifiedBy: p.verified_by,
+            rating: p.rating || 5,
+          }));
+        }
+        this.saveToStorage();
+      }
+    } catch (e) {
+      console.log('Worker profile fetch fallback to local cache');
     }
   }
 
@@ -168,10 +235,8 @@ class Store {
           createdAt: u.created_at,
         };
 
-        if (u.role === 'worker' && u.profile_data) {
-          this.workerProfile.fullName = u.profile_data.full_name;
-          this.workerProfile.primaryTrade = u.profile_data.primary_trade;
-          this.workerProfile.city = u.profile_data.city;
+        if (u.role === 'worker') {
+          await this.fetchWorkerProfile();
         } else if (u.role === 'employer' && u.profile_data) {
           this.employerProfile.companyName = u.profile_data.company_name;
           this.employerProfile.tradeIndustry = u.profile_data.trade_industry;
@@ -315,7 +380,7 @@ class Store {
     return { success: true, message: 'Applied successfully!', applicationId: newApp.id };
   }
 
-  addProofOfWork(item: Omit<ProofOfWorkItem, 'id'>) {
+  async addProofOfWork(item: Omit<ProofOfWorkItem, 'id'>) {
     const newPow: ProofOfWorkItem = {
       id: `pow_${Date.now()}`,
       ...item,
@@ -325,15 +390,41 @@ class Store {
     this.workerProfile.trustScore.completedJobs.completedCount += 1;
     this.recalcTrustScore();
     this.saveToStorage();
+
+    try {
+      await workerApi.addProofOfWork({
+        title: item.title,
+        description: item.description,
+        category: item.category,
+        images: item.images,
+        skills_demonstrated: item.skillsDemonstrated,
+        client_or_employer: item.clientOrEmployer,
+        location: item.location,
+        completion_date: item.completionDate,
+      });
+    } catch (e) {
+      console.log('Proof of work saved locally.');
+    }
   }
 
-  addSkill(skill: Omit<SkillItem, 'id'>) {
+  async addSkill(skill: Omit<SkillItem, 'id'>) {
     const newSkill: SkillItem = {
       id: `skill_${Date.now()}`,
       ...skill,
     };
     this.workerProfile.skills.push(newSkill);
     this.saveToStorage();
+
+    try {
+      await workerApi.addSkill({
+        skill_name: skill.name,
+        category: skill.category,
+        level: skill.level,
+        years_experience: skill.yearsExperience,
+      });
+    } catch (e) {
+      console.log('Skill saved locally.');
+    }
   }
 
   private recalcTrustScore() {
