@@ -7,3 +7,4 @@ pgvector>=0.2.4
 python-dotenv>=1.0.0
 django-filter>=23.5
 Pillow>=10.2.0
+drf-spectacular>=0.28.0

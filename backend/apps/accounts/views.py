@@ -7,6 +7,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from common.responses import success_response, error_response
+from drf_spectacular.utils import extend_schema, OpenApiExample
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -23,6 +24,13 @@ class RegisterView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        tags=['Authentication'],
+        summary='Register a new Worker or Employer account',
+        description='Registers a new user on KaushalConnect and initializes their profile record with role validation.',
+        request=RegisterSerializer,
+        responses={201: UserSerializer}
+    )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if not serializer.is_valid():
@@ -52,6 +60,13 @@ class LoginView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        tags=['Authentication'],
+        summary='Login and obtain JWT tokens',
+        description='Authenticates a worker or employer and returns a JWT access and refresh token pair.',
+        request=LoginSerializer,
+        responses={200: UserSerializer}
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
@@ -80,6 +95,12 @@ class TokenRefreshCustomView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        tags=['Authentication'],
+        summary='Refresh JWT access token',
+        description='Takes a valid refresh token and returns a new access token.',
+        responses={200: dict}
+    )
     def post(self, request):
         refresh_token = request.data.get('refresh')
         if not refresh_token:
@@ -109,6 +130,11 @@ class LogoutView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=['Authentication'],
+        summary='Logout current session',
+        description='Blacklists the provided refresh token and invalidates active session.'
+    )
     def post(self, request):
         refresh_token = request.data.get('refresh')
         if refresh_token:
@@ -126,6 +152,12 @@ class CurrentUserView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=['Authentication'],
+        summary='Get current authenticated user profile',
+        description='Returns identity, role, and verification status for current authenticated token bearer.',
+        responses={200: UserSerializer}
+    )
     def get(self, request):
         user_data = UserSerializer(request.user).data
         return success_response(

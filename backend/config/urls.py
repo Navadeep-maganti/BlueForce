@@ -34,8 +34,19 @@ from apps.reports.views import (
     AdminReportUpdateView,
 )
 
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # OpenAPI 3 Schema & Interactive Documentation (Phase 20)
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     # API v1 Versioning
     path('api/v1/auth/', include('apps.accounts.urls')),
