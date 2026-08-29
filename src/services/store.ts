@@ -526,6 +526,10 @@ class Store {
     }
   }
 
+  applyToJob(jobId: string) {
+    return this.applyForJob(jobId);
+  }
+
   private recalcTrustScore() {
     const ts = this.workerProfile.trustScore;
     ts.total =
@@ -775,12 +779,21 @@ class Store {
     this.verifyDocument(docId, false, reason);
   }
 
-  resolveReport(reportId: string, status: 'resolved' | 'dismissed' | string = 'resolved') {
+  resolveReport(reportId: string, status: 'resolved' | 'dismissed' | string = 'resolved', notes?: string) {
     const rep = this.reports.find((r) => r.id === reportId);
     if (rep) {
       rep.status = (status === 'dismissed' ? 'dismissed' : 'resolved');
       this.saveToStorage();
     }
+
+    const numericReportId = parseInt(reportId.replace(/\D/g, ''), 10) || 1;
+    const reportStatus = status === 'dismissed' ? 'DISMISSED' : 'RESOLVED';
+    import('./api/reportApi').then(({ reportApi }) => {
+      reportApi.updateReportStatus(numericReportId, {
+        status: reportStatus,
+        resolution_notes: notes || 'Admin verified and action taken.',
+      }).catch(() => console.log('Report resolution saved locally.'));
+    });
   }
 
   resetDemoData() {

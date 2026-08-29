@@ -28,6 +28,11 @@ from apps.matching.views import (
     EmployerRecommendedCandidatesView,
 )
 from apps.employers.views import EmployerSavedCandidatesListView
+from apps.reports.views import (
+    ReportSubmitView,
+    AdminReportQueueListView,
+    AdminReportUpdateView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -65,12 +70,16 @@ urlpatterns = [
     path('api/v1/admin/verifications/<int:pk>/approve/', AdminVerificationApproveView.as_view(), name='admin-verifications-approve'),
     path('api/v1/admin/verifications/<int:pk>/reject/', AdminVerificationRejectView.as_view(), name='admin-verifications-reject'),
 
+    # Platform Reports & Moderation (Phase 16)
+    path('api/v1/reports/', ReportSubmitView.as_view(), name='reports-submit-root'),
+    path('api/v1/admin/reports/', AdminReportQueueListView.as_view(), name='admin-reports-queue-root'),
+    path('api/v1/admin/reports/<int:pk>/', AdminReportUpdateView.as_view(), name='admin-report-update-root'),
+
     # Dashboard Aggregation APIs (Phase 10 & 15)
     path('api/v1/dashboard/worker/', WorkerDashboardAggregationView.as_view(), name='dashboard-worker-root'),
     path('api/v1/dashboard/employer/', EmployerDashboardAggregationView.as_view(), name='dashboard-employer-root'),
     path('api/v1/dashboard/', include('apps.analytics.urls')),
 
-    path('api/v1/reports/', include('apps.reports.urls')),
     path('api/v1/notifications/', include('apps.notifications.urls')),
     path('api/v1/analytics/', include('apps.analytics.urls')),
 ]

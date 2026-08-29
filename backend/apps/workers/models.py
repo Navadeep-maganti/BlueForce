@@ -66,6 +66,8 @@ class WorkerProfile(models.Model):
         indexes = [
             models.Index(fields=['primary_trade', 'city']),
             models.Index(fields=['trust_score_total', 'availability']),
+            models.Index(fields=['years_of_experience']),
+            models.Index(fields=['created_at']),
         ]
 
     def calculate_trust_score(self):

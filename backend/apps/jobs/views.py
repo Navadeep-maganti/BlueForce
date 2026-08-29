@@ -52,7 +52,7 @@ class EmployerJobListCreateView(APIView):
         job = serializer.save(employer=employer)
         return success_response(
             data=EmployerJobSerializer(job).data,
-            message="Job posted successfully.",
+            message="Job posting created and activated successfully.",
             status_code=status.HTTP_201_CREATED
         )
 
@@ -68,7 +68,10 @@ class EmployerJobDetailView(APIView):
         employer = get_object_or_404(EmployerProfile, user=request.user)
         job = get_object_or_404(Job, pk=pk, employer=employer)
         serializer = EmployerJobSerializer(job)
-        return success_response(data=serializer.data)
+        return success_response(
+            data=serializer.data,
+            message="Job details retrieved successfully."
+        )
 
     def patch(self, request, pk):
         employer = get_object_or_404(EmployerProfile, user=request.user)
@@ -76,7 +79,7 @@ class EmployerJobDetailView(APIView):
         serializer = EmployerJobSerializer(job, data=request.data, partial=True)
         if not serializer.is_valid():
             return error_response(
-                message="Job update failed.",
+                message="Job update validation failed.",
                 errors=serializer.errors,
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -93,24 +96,29 @@ class EmployerJobDetailView(APIView):
 class PublicJobListView(APIView):
     """
     GET /api/v1/jobs/
-    Public job discovery endpoint with multi-parameter filtering:
-    - search (keyword search over title, trade, description, required skills, company)
-    - location / city
-    - radius (max distance in km)
-    - min_salary
-    - max_salary
-    - experience (max experience required)
-    - shift
-    - job_type
-    - skills
+    Public job discovery engine with high-performance filtering:
+    - search: title, description, trade category, company name, city
+    - location / city: geographic location
+    - minimum_salary / min_salary: lower salary bound
+    - maximum_salary / max_salary: upper salary bound
+    - experience: max experience required
+    - job_type: Full-time, Contract, Shift-based, Part-time
+    - shift: Day Shift, Night Shift, Rotational, Flexible
+    - skills: required / preferred skills filter
+    - status: active (default), draft, paused, closed, all
+    - ordering: -created_at, salary_max, -salary_min, experience_required_years, -openings
     """
     permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
 
     def get(self, request):
-        jobs = Job.objects.filter(status='active').select_related('employer')
+        status_param = request.query_params.get('status', 'active')
+        if status_param.lower() == 'all':
+            jobs = Job.objects.all().select_related('employer')
+        else:
+            jobs = Job.objects.filter(status=status_param).select_related('employer')
 
-        # 1. Search Query
+        # 1. Multi-Field Keyword Search
         search = request.query_params.get('search')
         if search:
             jobs = jobs.filter(
@@ -118,10 +126,11 @@ class PublicJobListView(APIView):
                 Q(trade_category__icontains=search) |
                 Q(description__icontains=search) |
                 Q(employer__company_name__icontains=search) |
-                Q(city__icontains=search)
+                Q(city__icontains=search) |
+                Q(location__icontains=search)
             )
 
-        # 2. Location Filter
+        # 2. Location & City Filter
         location = request.query_params.get('location') or request.query_params.get('city')
         if location and location.lower() != 'all':
             jobs = jobs.filter(
@@ -129,27 +138,29 @@ class PublicJobListView(APIView):
                 Q(location__icontains=location)
             )
 
-        # 3. Trade Category
+        # 3. Trade Category Filter
         category = request.query_params.get('category') or request.query_params.get('trade')
         if category and category.lower() != 'all':
             jobs = jobs.filter(trade_category__icontains=category)
 
-        # 4. Salary Bounds
-        min_salary = request.query_params.get('min_salary')
+        # 4. Salary Bounds (Supports min_salary / minimum_salary & max_salary / maximum_salary)
+        min_salary = request.query_params.get('minimum_salary') or request.query_params.get('min_salary')
         if min_salary:
             try:
-                jobs = jobs.filter(salary_max__gte=int(min_salary))
+                min_val = int(min_salary)
+                jobs = jobs.filter(Q(salary_max__gte=min_val) | Q(salary_min__gte=min_val))
             except ValueError:
                 pass
 
-        max_salary = request.query_params.get('max_salary')
+        max_salary = request.query_params.get('maximum_salary') or request.query_params.get('max_salary')
         if max_salary:
             try:
-                jobs = jobs.filter(salary_min__lte=int(max_salary))
+                max_val = int(max_salary)
+                jobs = jobs.filter(salary_min__lte=max_val)
             except ValueError:
                 pass
 
-        # 5. Experience
+        # 5. Experience Filter
         experience = request.query_params.get('experience')
         if experience:
             try:
@@ -157,7 +168,7 @@ class PublicJobListView(APIView):
             except ValueError:
                 pass
 
-        # 6. Shift & Job Type
+        # 6. Shift & Job Type Filters
         shift = request.query_params.get('shift')
         if shift and shift.lower() != 'all':
             jobs = jobs.filter(shift__iexact=shift)
@@ -166,13 +177,41 @@ class PublicJobListView(APIView):
         if job_type and job_type.lower() != 'all':
             jobs = jobs.filter(job_type__iexact=job_type)
 
-        # 7. Radius Filter
+        # 7. Skills Filter (Supports comma-separated or single skill)
+        skills = request.query_params.get('skills') or request.query_params.get('skill')
+        if skills and skills.lower() != 'all':
+            skill_list = [s.strip() for s in skills.split(',') if s.strip()]
+            for sk in skill_list:
+                jobs = jobs.filter(
+                    Q(required_skills__icontains=sk) |
+                    Q(preferred_skills__icontains=sk) |
+                    Q(title__icontains=sk)
+                )
+
+        # 8. Radius Filter
         radius = request.query_params.get('radius')
         if radius:
             try:
                 jobs = jobs.filter(distance_km__lte=float(radius))
             except ValueError:
                 pass
+
+        # 9. Dynamic Ordering
+        ordering = request.query_params.get('ordering', '-created_at')
+        allowed_orderings = [
+            'created_at', '-created_at',
+            'salary_max', '-salary_max',
+            'salary_min', '-salary_min',
+            'experience_required_years', '-experience_required_years',
+            'distance_km', '-distance_km',
+            'openings', '-openings',
+        ]
+        if ordering in allowed_orderings:
+            jobs = jobs.order_by(ordering)
+        else:
+            jobs = jobs.order_by('-created_at')
+
+        jobs = jobs.distinct()
 
         # Paginate results
         paginator = self.pagination_class()

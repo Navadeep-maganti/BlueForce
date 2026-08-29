@@ -65,8 +65,11 @@ class Job(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [
+            models.Index(fields=['status', 'created_at']),
             models.Index(fields=['trade_category', 'city', 'status']),
             models.Index(fields=['salary_min', 'salary_max']),
+            models.Index(fields=['job_type', 'shift']),
+            models.Index(fields=['experience_required_years']),
         ]
 
     def __str__(self):
