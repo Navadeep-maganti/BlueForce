@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Mic,
@@ -7,14 +7,9 @@ import {
   Bookmark,
   CheckCircle2,
   Sparkles,
-  ArrowRight,
   SlidersHorizontal,
-  Building,
-  Clock,
-  Briefcase,
-  X,
 } from 'lucide-react';
-import { useI18n } from '../../i18n/context';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 import { MatchScoreModal } from '../../components/matching/MatchScoreModal';
 import { Job, JobMatchBreakdown } from '../../types';
@@ -30,7 +25,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
   onOpenVoiceModal,
   initialSearch,
 }) => {
-  const { t } = useI18n();
+  const { t } = useTranslation(['jobs', 'common', 'navigation', 'worker', 'verification']);
   const store = useStore();
   const jobs = store.jobs;
   const worker = store.workerProfile;
@@ -46,7 +41,24 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  useEffect(() => {
+    if (initialSearch) {
+      if (initialSearch.keyword) setSearchQuery(initialSearch.keyword);
+      if (initialSearch.location) setSelectedLocation(initialSearch.location);
+      if (initialSearch.minSalary !== undefined) setMinSalary(initialSearch.minSalary);
+    }
+  }, [initialSearch]);
+
   const handleApply = (job: Job) => {
+    if (!store.currentUser) {
+      onNavigate('/auth?role=worker');
+      return;
+    }
+    if (store.currentUser.role !== 'worker') {
+      setToastMessage('Only registered Workers can apply for jobs. You are logged in as an Employer.');
+      setTimeout(() => setToastMessage(null), 3500);
+      return;
+    }
     const res = store.applyForJob(job.id);
     setToastMessage(res.message);
     setTimeout(() => setToastMessage(null), 3000);
@@ -105,7 +117,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search jobs by trade (Electrician, CNC, Solar, Welder) or skills..."
+              placeholder={t('jobs:searchPlaceholder', 'Search by trade, title, or machine skill...')}
               className="form-input text-xs pl-8 pr-3 py-2"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -118,7 +130,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
               onChange={(e) => setSelectedLocation(e.target.value)}
               className="form-select text-xs py-2"
             >
-              <option value="all">📍 All Locations</option>
+              <option value="all">📍 {t('jobs:allLocations', 'All Locations')}</option>
               <option value="Vijayawada">Vijayawada, AP</option>
               <option value="Hyderabad">Hyderabad, TS</option>
               <option value="Bengaluru">Bengaluru, KA</option>
@@ -133,7 +145,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
             className="btn btn-outline-primary py-2 px-3 text-xs font-semibold flex items-center gap-1.5 w-full md:w-auto justify-center"
           >
             <Mic className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-            Voice Search
+            {t('navigation:voiceSearch', 'Voice Search')}
           </button>
 
           {/* Mobile Filter Toggle */}
@@ -142,7 +154,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
             className="btn btn-secondary py-2 px-2.5 text-xs md:hidden flex items-center gap-1 w-full justify-center"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            Filters {minSalary > 0 || selectedCategory !== 'all' ? '●' : ''}
+            {t('common:actions.filter', 'Filters')} {minSalary > 0 || selectedCategory !== 'all' ? '●' : ''}
           </button>
         </div>
       </div>
@@ -157,7 +169,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
         >
           <div className="flex items-center justify-between pb-2.5 border-b">
             <h3 className="font-bold text-xs text-navy flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5 text-primary" /> Filter Openings
+              <Filter className="w-3.5 h-3.5 text-primary" /> {t('common:actions.applyFilters', 'Filter Openings')}
             </h3>
             {(selectedCategory !== 'all' || minSalary > 0 || selectedShift !== 'all') && (
               <button
@@ -171,17 +183,19 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                 }}
                 className="text-[10px] font-bold text-red-600 hover:underline"
               >
-                Reset
+                {t('common:actions.reset', 'Reset')}
               </button>
             )}
           </div>
 
           {/* Filter 1: Trade Category */}
           <div>
-            <label className="text-[11px] font-bold text-slate-700 block mb-1.5">Trade Category</label>
+            <label className="text-[11px] font-bold text-slate-700 block mb-1.5">
+              {t('jobs:filterByTrade', 'Trade / Industry')}
+            </label>
             <div className="space-y-0.5">
               {[
-                { id: 'all', label: 'All Trades' },
+                { id: 'all', label: t('jobs:allTrades', 'All Trades') },
                 { id: 'Electrical', label: '⚡ Electrical & Wiring' },
                 { id: 'Solar', label: '☀️ Solar & Renewable' },
                 { id: 'Machining', label: '⚙️ CNC & Tooling' },
@@ -206,9 +220,11 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
           {/* Filter 2: Min Salary */}
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-[11px] font-bold text-slate-700">Min Monthly Pay</label>
+              <label className="text-[11px] font-bold text-slate-700">
+                {t('jobs:filterBySalary', 'Min Monthly Pay')}
+              </label>
               <span className="text-[11px] font-bold text-emerald-700">
-                {minSalary === 0 ? 'Any' : `₹${minSalary.toLocaleString()}+`}
+                {minSalary === 0 ? t('jobs:anyExperience', 'Any') : `₹${minSalary.toLocaleString()}+`}
               </span>
             </div>
             <input
@@ -221,7 +237,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
               className="w-full accent-primary h-1.5"
             />
             <div className="flex justify-between text-[9px] text-muted">
-              <span>Any</span>
+              <span>{t('jobs:anyExperience', 'Any')}</span>
               <span>₹20k</span>
               <span>₹30k</span>
               <span>₹35k+</span>
@@ -252,13 +268,15 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
 
           {/* Filter 4: Shift */}
           <div>
-            <label className="text-[11px] font-bold text-slate-700 block mb-1">Shift</label>
+            <label className="text-[11px] font-bold text-slate-700 block mb-1">
+              {t('jobs:filterByJobType', 'Shift')}
+            </label>
             <select
               value={selectedShift}
               onChange={(e) => setSelectedShift(e.target.value)}
               className="form-select text-xs py-1.5"
             >
-              <option value="all">Any Shift</option>
+              <option value="all">{t('jobs:anyExperience', 'Any Shift')}</option>
               <option value="Day Shift">Day Shift</option>
               <option value="Night Shift">Night Shift</option>
               <option value="Rotational">Rotational Shift</option>
@@ -266,23 +284,30 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
           </div>
         </aside>
 
-        {/* Job Listings Column (8/9 cols) */}
+        {/* Job Listings Column */}
         <main className="md:col-span-8 lg:col-span-9 space-y-3.5">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-slate-600">
-              Showing <strong>{filteredJobs.length}</strong> matching openings
+              {t('common:pagination.showing', {
+                from: 1,
+                to: filteredJobs.length,
+                total: filteredJobs.length,
+                defaultValue: `Showing ${filteredJobs.length} matching openings`,
+              })}
             </span>
             <span className="badge badge-verified text-[10px]">
-              ✓ Direct Factory Openings
+              ✓ {t('common:badges.topEmployer', 'Direct Factory Openings')}
             </span>
           </div>
 
           {filteredJobs.length === 0 ? (
             <div className="kc-card p-8 text-center bg-white border">
               <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <h3 className="text-xs font-bold text-navy">No matching jobs found</h3>
+              <h3 className="text-xs font-bold text-navy">
+                {t('common:emptyState.noResults', 'No matching jobs found')}
+              </h3>
               <p className="text-[11px] text-muted mt-0.5 max-w-sm mx-auto">
-                Try widening your trade filters or resetting salary bounds.
+                {t('common:emptyState.noResultsDesc', 'Try widening your trade filters or resetting salary bounds.')}
               </p>
             </div>
           ) : (
@@ -323,7 +348,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                           </span>
                           <span>•</span>
                           <span className="flex items-center gap-0.5">
-                            <MapPin className="w-3 h-3 text-slate-400" /> {job.location} ({job.distanceKm || 8} km away)
+                            <MapPin className="w-3 h-3 text-slate-400" /> {job.location} ({job.distanceKm || 8} km)
                           </span>
                           <span>•</span>
                           <span>{job.postedAt}</span>
@@ -335,10 +360,19 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                     <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1">
                       <div className="text-xs font-black text-emerald-700">
                         ₹{job.salaryMin.toLocaleString()} – ₹{job.salaryMax.toLocaleString()}
-                        <span className="text-[9px] font-normal text-muted block text-right">/ mo</span>
+                        <span className="text-[9px] font-normal text-muted block text-right">
+                          / {t('common:time.perMonth', 'mo')}
+                        </span>
                       </div>
                       <button
-                        onClick={() => store.toggleBookmarkJob(job.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!store.currentUser) {
+                            onNavigate('/auth?role=worker');
+                            return;
+                          }
+                          store.toggleBookmarkJob(job.id);
+                        }}
                         className={`p-1 rounded-md border transition-colors ${
                           isBookmarked
                             ? 'bg-amber-50 text-amber-600 border-amber-300'
@@ -368,8 +402,11 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                         </div>
                         <div>
                           <div className="text-[11px] font-bold text-navy flex items-center gap-1">
-                            <span>{job.matchData.matchPercentage}% Trade Fit</span>
-                            <span className="badge badge-primary text-[9px] py-0">Explain</span>
+                            <span>{job.matchData.matchPercentage}% {t('employer:matchScore', 'Trade Fit')}</span>
+                            <span className="badge badge-primary text-[9px] py-0">
+                              <Sparkles className="w-2.5 h-2.5 inline mr-0.5" />
+                              {t('jobs:jobDetails.matchAnalysis', 'Explain')}
+                            </span>
                           </div>
                           <p className="text-[10px] text-slate-600 line-clamp-1">
                             {job.matchData.reasons.join(' • ')}
@@ -377,14 +414,16 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                         </div>
                       </div>
                       <span className="text-[10px] font-bold text-primary whitespace-nowrap self-end sm:self-center">
-                        Formula Breakdown →
+                        {t('jobs:jobDetails.matchAnalysis', 'Formula Breakdown →')}
                       </span>
                     </div>
                   )}
 
                   {/* Skills tags */}
                   <div className="flex flex-wrap items-center gap-1">
-                    <span className="text-[10px] text-muted font-semibold mr-0.5">Required:</span>
+                    <span className="text-[10px] text-muted font-semibold mr-0.5">
+                      {t('jobs:jobDetails.requirements', 'Required')}:
+                    </span>
                     {job.requiredSkills.map((skill, idx) => (
                       <span key={idx} className="badge badge-neutral text-[9px]">
                         {skill}
@@ -395,11 +434,11 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                   {/* Bottom Actions */}
                   <div className="pt-2.5 border-t flex items-center justify-between">
                     <div className="flex items-center gap-2 text-[10px] text-muted">
-                      <span>{job.openings} Openings</span>
+                      <span>{t('jobs:jobCard.openings', { count: job.openings, defaultValue: `${job.openings} Openings` })}</span>
                       <span>•</span>
                       <span>{job.shift}</span>
                       <span>•</span>
-                      <span>Min {job.experienceRequiredYears}y exp</span>
+                      <span>{t('worker:experienceYears', { years: job.experienceRequiredYears, defaultValue: `Min ${job.experienceRequiredYears}y exp` })}</span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -407,7 +446,7 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                         onClick={() => onNavigate(`/worker/jobs/${job.id}`)}
                         className="btn btn-secondary btn-sm text-[11px]"
                       >
-                        Details
+                        {t('jobs:jobCard.viewDetails', 'Details')}
                       </button>
                       <button
                         onClick={() => handleApply(job)}
@@ -418,7 +457,9 @@ export const JobDiscoveryPage: React.FC<JobDiscoveryPageProps> = ({
                             : 'btn-primary'
                         }`}
                       >
-                        {hasApplied ? 'Applied ✓' : 'Apply with Trust ID'}
+                        {hasApplied
+                          ? t('jobs:jobCard.applied', 'Applied ✓')
+                          : t('jobs:jobCard.quickApply', 'Quick Apply')}
                       </button>
                     </div>
                   </div>

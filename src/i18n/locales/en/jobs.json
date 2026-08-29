@@ -1,0 +1,56 @@
+{
+  "searchPlaceholder": "Search by trade, title, or machine skill...",
+  "locationPlaceholder": "City, district or industrial zone...",
+  "filterByTrade": "Trade / Industry",
+  "filterByExperience": "Experience Level",
+  "filterBySalary": "Minimum Monthly Salary",
+  "filterByJobType": "Job Type",
+  "allTrades": "All Trades",
+  "allLocations": "All Locations",
+  "anyExperience": "Any Experience",
+  "fresher": "Entry level / Fresher (0-1 yrs)",
+  "midLevel": "Mid level (2-5 yrs)",
+  "seniorLevel": "Senior level (5+ yrs)",
+  "sortOptions": {
+    "label": "Sort by",
+    "bestMatch": "Best Match (AI Score)",
+    "highestSalary": "Highest Salary",
+    "newest": "Recently Posted",
+    "trustScore": "Top Employer Trust"
+  },
+  "jobCard": {
+    "openings": "{{count}} openings",
+    "perMonth": "per month",
+    "viewDetails": "View Details",
+    "quickApply": "Quick Apply",
+    "applied": "Already Applied",
+    "posted": "Posted {{time}}",
+    "urgent": "Urgent",
+    "verifiedCompany": "Verified Company"
+  },
+  "jobDetails": {
+    "aboutCompany": "About Company",
+    "jobOverview": "Job Overview",
+    "responsibilities": "Key Responsibilities",
+    "requirements": "Skills & Experience Requirements",
+    "certifications": "Preferred Certifications",
+    "benefits": "Benefits & Perks",
+    "salaryAndPerks": "Compensation & Facilities",
+    "foodAndAccom": "Food & Accommodation",
+    "providentFund": "PF & ESI Provided",
+    "overtime": "Overtime Available",
+    "transport": "Transportation / Cab",
+    "applyNow": "Apply for this Opening",
+    "matchAnalysis": "Match Score Breakdown",
+    "dynamicNotice": "Note: Job details and requirements are provided directly by the employer."
+  },
+  "voiceModal": {
+    "title": "Voice Job Search",
+    "listening": "Listening… speak in English, Telugu or Hindi",
+    "clickToSpeak": "Tap microphone to speak your search",
+    "samplePrompt": "For example: “Electrician work near Vijayawada above 25 thousand.”",
+    "orTry": "Or try these voice samples:",
+    "searchResultBtn": "Find Jobs",
+    "analyzingVoice": "Processing voice input…"
+  }
+}

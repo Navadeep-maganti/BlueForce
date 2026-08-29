@@ -1,0 +1,30 @@
+{
+  "title": "Credential & Trust Verification Centre",
+  "subtitle": "Antigravity Trust Engine verifying authentic Aadhaar ID, NSDC certificates, and past employer work proofs.",
+  "scoreBreakdown": "Trust Score 100-Point Formula",
+  "factors": {
+    "identity": "Government Identity Verification",
+    "identityDesc": "Aadhaar / DigiLocker official identity confirmation (+20 pts)",
+    "skills": "Trade Skill & Technical Assessment",
+    "skillsDesc": "Standardized trade assessment or vocational training score (+25 pts)",
+    "certifications": "Recognized Certifications",
+    "certificationsDesc": "NSDC, NCVT, ITI, or state vocational board certificate (+20 pts)",
+    "experience": "Employer Verified Experience",
+    "experienceDesc": "Past industrial employer reference or EPF service proof (+20 pts)",
+    "proofOfWork": "Photo & Video Proof of Work",
+    "proofOfWorkDesc": "Geotagged work site evidence reviewed and validated (+15 pts)"
+  },
+  "adminQueue": {
+    "title": "Verification Queue",
+    "pendingItems": "Pending Verification Items",
+    "workerName": "Worker Name",
+    "itemType": "Verification Item",
+    "submittedOn": "Submitted",
+    "document": "Document / Proof",
+    "approve": "Approve Credential",
+    "reject": "Reject & Request Reupload",
+    "status": "Audit Status"
+  },
+  "verifiedBadge": "Kaushal Verified Trust Badge",
+  "auditNotice": "All credential verifications follow strict NSDC / NCVT compliance standards."
+}

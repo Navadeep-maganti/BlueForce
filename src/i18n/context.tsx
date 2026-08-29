@@ -1,36 +1,78 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { LanguageCode, translations, Translations } from './translations';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { I18nextProvider, useTranslation as useI18nextTranslation } from 'react-i18next';
+import i18n, { LanguageCode, LanguageInfo, SUPPORTED_LANGUAGES, resources } from './config';
 
-interface I18nContextType {
+export type { LanguageCode, LanguageInfo };
+export { SUPPORTED_LANGUAGES };
+
+export interface I18nContextType {
   language: LanguageCode;
-  setLanguage: (lang: LanguageCode) => void;
-  t: Translations;
+  setLanguage: (lang: LanguageCode) => Promise<void>;
+  changeLanguage: (lang: LanguageCode) => Promise<void>;
+  supportedLanguages: LanguageInfo[];
+  currentLanguageInfo: LanguageInfo;
+  t: (key: string, options?: Record<string, any>) => string;
+  tNs: (namespace: string, key: string, options?: Record<string, any>) => string;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<LanguageCode>(() => {
-    const saved = localStorage.getItem('kaushal_lang') as LanguageCode;
-    return saved && ['en', 'te', 'hi'].includes(saved) ? saved : 'en';
+  const [currentLang, setCurrentLang] = useState<LanguageCode>(() => {
+    const active = (i18n.language || 'en').slice(0, 2) as LanguageCode;
+    return ['en', 'hi', 'te'].includes(active) ? active : 'en';
   });
 
-  const setLanguage = (lang: LanguageCode) => {
-    setLanguageState(lang);
-    localStorage.setItem('kaushal_lang', lang);
+  const changeLanguage = async (lang: LanguageCode) => {
+    await i18n.changeLanguage(lang);
+    setCurrentLang(lang);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('kaushal_lang', lang);
+    }
   };
 
   useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
+    const handleLangChange = (lng: string) => {
+      const code = lng.slice(0, 2) as LanguageCode;
+      if (['en', 'hi', 'te'].includes(code)) {
+        setCurrentLang(code);
+      }
+    };
+    i18n.on('languageChanged', handleLangChange);
+    return () => {
+      i18n.off('languageChanged', handleLangChange);
+    };
+  }, []);
 
-  const value: I18nContextType = {
-    language,
-    setLanguage,
-    t: translations[language] || translations.en,
-  };
+  const currentLanguageInfo = useMemo(() => {
+    return (
+      SUPPORTED_LANGUAGES.find((lang) => lang.code === currentLang) ||
+      SUPPORTED_LANGUAGES[0]
+    );
+  }, [currentLang]);
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  const value: I18nContextType = useMemo(
+    () => ({
+      language: currentLang,
+      setLanguage: changeLanguage,
+      changeLanguage,
+      supportedLanguages: SUPPORTED_LANGUAGES,
+      currentLanguageInfo,
+      t: (key: string, options?: Record<string, any>) => {
+        return i18n.t(key, options);
+      },
+      tNs: (namespace: string, key: string, options?: Record<string, any>) => {
+        return i18n.t(`${namespace}:${key}`, options);
+      },
+    }),
+    [currentLang, currentLanguageInfo]
+  );
+
+  return (
+    <I18nextProvider i18n={i18n}>
+      <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
+    </I18nextProvider>
+  );
 };
 
 export const useI18n = (): I18nContextType => {
@@ -40,3 +82,6 @@ export const useI18n = (): I18nContextType => {
   }
   return context;
 };
+
+// Also export standard useTranslation hook from react-i18next
+export { useI18nextTranslation as useTranslation };

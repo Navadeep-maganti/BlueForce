@@ -1,0 +1,87 @@
+{
+  "appName": "कौशलकनेक्ट",
+  "tagline": "हुनर जिसे पहचान मिले। काम जिस पर भरोसा हो।",
+  "slogan": "सत्यापित पहचान और सीधे अवसरों के साथ भारत के कुशल कार्यबल को सशक्त बनाना।",
+  "actions": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "delete": "हटाएँ",
+    "edit": "संपादित करें",
+    "update": "अपडेट करें",
+    "submit": "जमा करें",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "clearAll": "सभी साफ़ करें",
+    "applyFilters": "फ़िल्टर लागू करें",
+    "reset": "रीसेट करें",
+    "close": "बंद करें",
+    "back": "पीछे जाएँ",
+    "next": "आगे",
+    "continue": "जारी रखें",
+    "viewDetails": "विवरण देखें",
+    "viewAll": "सभी देखें",
+    "learnMore": "और जानें",
+    "download": "डाउनलोड करें",
+    "upload": "अपलोड करें",
+    "copy": "कॉपी करें",
+    "copied": "कॉपी हो गया!",
+    "share": "शेयर करें",
+    "refresh": "रीफ़्रेश करें",
+    "loading": "लोड हो रहा है...",
+    "processing": "प्रक्रिया जारी है...",
+    "submitting": "जमा किया जा रहा है...",
+    "saving": "सहेजा जा रहा है..."
+  },
+  "status": {
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "pending": "लंबित",
+    "verified": "सत्यापित",
+    "unverified": "असत्यापित",
+    "inReview": "समीक्षाधीन",
+    "approved": "स्वीकृत",
+    "rejected": "अस्वीकृत",
+    "completed": "पूर्ण",
+    "expired": "समाप्त",
+    "draft": "ड्राफ़्ट",
+    "published": "प्रकाशित",
+    "closed": "बंद"
+  },
+  "badges": {
+    "verifiedWorker": "सत्यापित तकनीशियन",
+    "trustScore": "ट्रस्ट स्कोर",
+    "highMatch": "उत्कृष्ट मिलान",
+    "urgentHiring": "तत्काल आवश्यकता",
+    "topEmployer": "सत्यापित नियोक्ता",
+    "governmentCertified": "NSDC प्रमाणित",
+    "proofVerified": "काम का प्रमाण सत्यापित"
+  },
+  "time": {
+    "justNow": "अभी-अभी",
+    "minsAgo": "{{count}} मिनट पहले",
+    "hoursAgo": "{{count}} घंटे पहले",
+    "daysAgo": "{{count}} दिन पहले",
+    "weeksAgo": "{{count}} सप्ताह पहले",
+    "monthsAgo": "{{count}} माह पहले",
+    "perMonth": "प्रति माह",
+    "perDay": "प्रति दिन",
+    "perHour": "प्रति घंटा"
+  },
+  "pagination": {
+    "previous": "पिछला",
+    "next": "अगला",
+    "showing": "{{total}} में से {{from}} से {{to}} परिणाम दिखाए जा रहे हैं",
+    "page": "पृष्ठ {{current}} / {{total}}"
+  },
+  "emptyState": {
+    "noResults": "कोई परिणाम नहीं मिला",
+    "noResultsDesc": "अधिक अवसर खोजने के लिए अपने फ़िल्टर या खोज शब्दों को बदल कर देखें।",
+    "clearFilters": "फ़िल्टर साफ़ करें"
+  },
+  "confirm": {
+    "areYouSure": "क्या आप सुनिश्चित हैं?",
+    "actionCannotBeUndone": "यह कार्रवाई वापस नहीं ली जा सकती।"
+  },
+  "integrityDisclaimer": "उपयोगकर्ता प्रोफ़ाइल और नियोक्ता द्वारा दर्ज नौकरी विवरण मूल सबमिशन दर्शाते हैं। सत्यापन बैज प्लेटफ़ॉर्म प्रमाण-पत्र ऑडिट को दर्शाते हैं।"
+}

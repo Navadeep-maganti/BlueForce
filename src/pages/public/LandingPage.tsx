@@ -1,8 +1,21 @@
 import React, { useState } from 'react';
 import {
-  ArrowRight, BadgeCheck, BriefcaseBusiness, Building2, ChevronRight,
-  Globe2, MapPin, Mic, Search, ShieldCheck, Sparkles, Star, UsersRound, Zap,
+  ArrowRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  Building2,
+  ChevronRight,
+  Globe2,
+  MapPin,
+  Mic,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  UsersRound,
+  Zap,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 import { MatchScoreModal } from '../../components/matching/MatchScoreModal';
 
@@ -12,51 +25,222 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenVoiceModal }) => {
+  const { t } = useTranslation(['common', 'navigation', 'jobs', 'worker', 'employer', 'verification']);
   const store = useStore();
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [search, setSearch] = useState('');
   const sampleMatch = store.jobs[0]?.matchData;
 
-  const startWorker = () => { store.loginAs('worker'); onNavigate('/worker/dashboard'); };
-  const startEmployer = () => { store.loginAs('employer'); onNavigate('/employer/dashboard'); };
-  const handleSearch = (event: React.FormEvent) => { event.preventDefault(); onNavigate('/worker/jobs'); };
+  const startWorker = () => {
+    onNavigate('/auth?role=worker');
+  };
+
+  const startEmployer = () => {
+    onNavigate('/auth?role=employer');
+  };
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    onNavigate('/jobs');
+  };
 
   return (
     <div className="landing">
+      {/* Hero Section */}
       <section className="landing-hero">
-        <div className="landing-orb landing-orb--one" /><div className="landing-orb landing-orb--two" />
+        <div className="landing-orb landing-orb--one" />
+        <div className="landing-orb landing-orb--two" />
         <div className="landing-shell landing-hero__grid">
           <div className="landing-hero__copy">
-            <p className="eyebrow"><Sparkles size={14} /> India&apos;s trusted skilled-work network</p>
-            <h1>Good work deserves a <span>better way in.</span></h1>
-            <p className="landing-hero__lede">Find verified opportunities or hire proven talent — without the uncertainty, endless calls, or unreliable profiles.</p>
+            <p className="eyebrow">
+              <Sparkles size={14} /> {t('common:slogan', "India's trusted skilled-work network")}
+            </p>
+            <h1>
+              {t('common:tagline', 'Skills that get seen. Work that gets trusted.')}
+            </h1>
+            <p className="landing-hero__lede">
+              {t(
+                'common:slogan',
+                'Empowering India\'s skilled workforce through verified credentials, proven work samples, and direct enterprise opportunities.'
+              )}
+            </p>
+
             <form className="landing-search" onSubmit={handleSearch}>
               <Search size={20} aria-hidden="true" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search electrician, welder, supervisor…" aria-label="Search jobs by role or skill" />
-              <button type="submit">Search jobs <ArrowRight size={16} /></button>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t('jobs:searchPlaceholder', 'Search electrician, welder, supervisor…')}
+                aria-label="Search jobs by role or skill"
+              />
+              <button type="submit">
+                {t('jobs:voiceModal.searchResultBtn', 'Search jobs')} <ArrowRight size={16} />
+              </button>
             </form>
-            <div className="landing-search__support"><span>Popular: Electrician</span><span>Maintenance</span><span>Machine operator</span><button onClick={onOpenVoiceModal} type="button"><Mic size={14} /> Search by voice</button></div>
+
+            <div className="landing-search__support">
+              <span>Popular: Electrician</span>
+              <span>CNC Operator</span>
+              <span>Welder</span>
+              <button onClick={onOpenVoiceModal} type="button">
+                <Mic size={14} /> {t('navigation:voiceSearch', 'Search by voice')}
+              </button>
+            </div>
+
             <div className="landing-paths" aria-label="Choose your path">
-              <button className="landing-path landing-path--primary" onClick={startWorker}><span className="landing-path__icon"><BriefcaseBusiness size={21} /></span><span><strong>I&apos;m looking for work</strong><small>Build a profile and find matches</small></span><ArrowRight size={18} /></button>
-              <button className="landing-path" onClick={startEmployer}><span className="landing-path__icon"><Building2 size={21} /></span><span><strong>I&apos;m hiring</strong><small>Discover people ready to work</small></span><ArrowRight size={18} /></button>
+              <button className="landing-path landing-path--primary" onClick={startWorker}>
+                <span className="landing-path__icon">
+                  <BriefcaseBusiness size={21} />
+                </span>
+                <span>
+                  <strong>{t('navigation:findWork', "I'm looking for work")}</strong>
+                  <small>{t('worker:trustScoreHelp', 'Build a verified profile & find matches')}</small>
+                </span>
+                <ArrowRight size={18} />
+              </button>
+
+              <button className="landing-path" onClick={startEmployer}>
+                <span className="landing-path__icon">
+                  <Building2 size={21} />
+                </span>
+                <span>
+                  <strong>{t('navigation:hireTalent', "I'm hiring")}</strong>
+                  <small>{t('employer:topCandidatesDesc', 'Discover verified technicians ready to work')}</small>
+                </span>
+                <ArrowRight size={18} />
+              </button>
             </div>
           </div>
+
+          {/* Platform Verified Credential Showcase Card */}
           <div className="talent-preview" aria-label="Example verified worker profile">
-            <div className="talent-preview__topline"><span><span className="live-dot" /> AVAILABLE NOW</span><span>Live profile</span></div>
-            <div className="talent-preview__person"><div className="talent-avatar">RK</div><div><h2>Ramesh Kumar <BadgeCheck size={18} /></h2><p>Industrial Electrician</p><p className="talent-preview__location"><MapPin size={14} /> Visakhapatnam · 4 yrs experience</p></div></div>
-            <div className="talent-preview__score"><div><span>Match score</span><strong>94%</strong><small>Great fit for your opening</small></div><div className="score-ring"><span>94</span></div></div>
-            <div className="talent-preview__skills"><span>Panel wiring</span><span>Safety systems</span><span>Preventive maintenance</span></div>
-            <div className="talent-preview__proof"><p><ShieldCheck size={17} /><span><strong>Verified to hire</strong><small>Identity, trade certificate & work proof checked</small></span></p><button onClick={() => setShowMatchModal(true)}>Why this match? <ChevronRight size={15} /></button></div>
+            <div className="talent-preview__topline">
+              <span>
+                <span className="live-dot" /> {t('worker:immediateJoining', 'AVAILABLE NOW')}
+              </span>
+              <span>{t('worker:verifiedBadge', 'Verified Credential')}</span>
+            </div>
+            <div className="talent-preview__person">
+              <div className="talent-avatar" style={{ width: '48px', height: '48px', minWidth: '48px', maxWidth: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #1e40af, #3b82f6)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                KC
+              </div>
+              <div>
+                <h2>
+                  Certified Technician <BadgeCheck size={18} className="text-blue-500" />
+                </h2>
+                <p>Industrial Electrician & Automation</p>
+                <p className="talent-preview__location">
+                  <MapPin size={14} /> Visakhapatnam, AP · 4 yrs experience
+                </p>
+              </div>
+            </div>
+
+            <div className="talent-preview__score">
+              <div>
+                <span>{t('employer:matchScore', 'Trust Score')}</span>
+                <strong>94/100</strong>
+                <small>{t('common:badges.highMatch', 'Aadhaar eKYC + NSDC Certified')}</small>
+              </div>
+              <div className="score-ring">
+                <span>94</span>
+              </div>
+            </div>
+
+            <div className="talent-preview__skills">
+              <span>Panel wiring</span>
+              <span>PLC Automation</span>
+              <span>Preventive maintenance</span>
+            </div>
+
+            <div className="talent-preview__proof">
+              <p>
+                <ShieldCheck size={17} />
+                <span>
+                  <strong>{t('common:badges.verifiedWorker', 'Direct Verified Hire')}</strong>
+                  <small>{t('verification:verifiedBadge', 'Identity, trade certificate & work proof checked')}</small>
+                </span>
+              </p>
+              <button onClick={() => setShowMatchModal(true)}>
+                {t('jobs:jobDetails.matchAnalysis', 'Why this match?')} <ChevronRight size={15} />
+              </button>
+            </div>
           </div>
         </div>
-        <div className="landing-shell landing-proofbar">
-          <div><strong>12,400+</strong><span>verified workers</span></div><div><strong>1,800+</strong><span>active employers</span></div><div><strong>91/100</strong><span>average trust score</span></div><div><span className="landing-proofbar__stars"><Star size={15} fill="currentColor" /><Star size={15} fill="currentColor" /><Star size={15} fill="currentColor" /><Star size={15} fill="currentColor" /><Star size={15} fill="currentColor" /></span><span>built for real work</span></div>
+
+        {/* Proof metrics bar */}
+        <div className="landing-proof">
+          <div className="landing-shell landing-proof__grid">
+            <div>
+              <strong>12,400+</strong>
+              <span>{t('common:hero.stat1Label', 'Verified blue-collar workers')}</span>
+            </div>
+            <div>
+              <strong>850+</strong>
+              <span>{t('common:hero.stat2Label', 'Industrial employers hiring')}</span>
+            </div>
+            <div>
+              <strong>4.2 Days</strong>
+              <span>{t('common:hero.stat3Label', 'Average time-to-hire')}</span>
+            </div>
+            <div>
+              <strong>100%</strong>
+              <span>{t('common:hero.stat4Label', 'Direct hiring, ₹0 commission')}</span>
+            </div>
+          </div>
         </div>
       </section>
-      <section className="landing-section landing-shell landing-intro"><div className="section-heading"><p className="eyebrow">One trusted place</p><h2>Every decision starts with proof, not promises.</h2><p>Blue Workforce makes skills, reliability, and availability easy to understand before anyone commits.</p></div><div className="value-grid"><article><span className="value-icon value-icon--blue"><ShieldCheck /></span><h3>Profiles you can trust</h3><p>Clear identity, certificates and work proof, all in one place.</p></article><article><span className="value-icon value-icon--violet"><Zap /></span><h3>Relevant matches first</h3><p>See the jobs and candidates that actually fit, with the reason why.</p></article><article><span className="value-icon value-icon--amber"><Globe2 /></span><h3>Easy in your language</h3><p>Use English, Telugu, Hindi, or voice search to move faster.</p></article></div></section>
-      <section className="landing-section landing-shell landing-flow"><div className="section-heading"><p className="eyebrow">Simple from day one</p><h2>Know exactly what to do next.</h2></div><div className="flow-steps"><article><span>01</span><div><h3>Create your trusted profile</h3><p>Add your skills and proof. We guide you through it in minutes.</p></div></article><article><span>02</span><div><h3>See the strongest matches</h3><p>Understand fit, pay, location, and requirements before you apply or contact.</p></div></article><article><span>03</span><div><h3>Move forward confidently</h3><p>Track every application, interview, and hiring decision in one clear place.</p></div></article></div></section>
-      <section className="landing-shell landing-cta"><div><p className="eyebrow">A better workforce, together</p><h2>Ready when you are.</h2><p>Join a hiring network built around skilled people and reliable outcomes.</p></div><div className="landing-cta__actions"><button className="button button--light" onClick={startWorker}>Find work <ArrowRight size={17} /></button><button className="button button--outline" onClick={startEmployer}>Hire talent <UsersRound size={17} /></button></div></section>
-      {showMatchModal && sampleMatch && <MatchScoreModal matchData={sampleMatch} jobTitle={store.jobs[0]?.title ?? 'Industrial Electrician'} companyName={store.jobs[0]?.companyName ?? 'Blue Workforce'} onClose={() => setShowMatchModal(false)} />}
+
+      {/* Feature Pillars */}
+      <section className="landing-section">
+        <div className="landing-shell">
+          <div className="section-head">
+            <span className="eyebrow">{t('common:features.badge', 'Built for trust & clarity')}</span>
+            <h2>{t('common:features.title', 'Everything workers & employers need in one unified ecosystem')}</h2>
+          </div>
+
+          <div className="landing-cards">
+            <div className="feature-card">
+              <div className="feature-card__icon">
+                <ShieldCheck size={26} />
+              </div>
+              <h3>{t('verification:title', '100-Point Antigravity Trust Score')}</h3>
+              <p>
+                {t('verification:subtitle', 'Aadhaar identity, NSDC trade certificates, tested technical skills, and verified past-employer work proofs combined into one transparent rating.')}
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-card__icon">
+                <Mic size={26} />
+              </div>
+              <h3>{t('jobs:voiceModal.title', 'Kaushal Voice Discovery')}</h3>
+              <p>
+                {t('jobs:voiceModal.listening', 'Search for local plant and workshop jobs in Telugu, Hindi, or English by speaking naturally. No complex typing required.')}
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-card__icon">
+                <Globe2 size={26} />
+              </div>
+              <h3>{t('common:multilingual', 'Native Multilingual Experience')}</h3>
+              <p>
+                Full UI support across English, हिन्दी (Hindi), and తెలుగు (Telugu) with instant switching and persistent language selection.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Candidate / Job Match Modal */}
+      {showMatchModal && sampleMatch && (
+        <MatchScoreModal
+          onClose={() => setShowMatchModal(false)}
+          jobTitle="Industrial Electrician & Substation Technician"
+          companyName="ABC Precision Industries Ltd."
+          matchData={sampleMatch}
+        />
+      )}
     </div>
   );
 };

@@ -1,36 +1,42 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from './Button';
+import { AlertCircle, RotateCcw } from 'lucide-react';
 
 export interface ErrorStateProps {
   title?: string;
-  message: string;
+  message?: string;
   onRetry?: () => void;
+  retryLabel?: string;
   className?: string;
 }
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
   title = 'Something went wrong',
-  message,
+  message = 'We encountered an unexpected error while loading this content. Please try again.',
   onRetry,
+  retryLabel = 'Retry Now',
   className = '',
 }) => {
   return (
-    <div className={`p-8 text-center rounded-2xl bg-rose-50/50 border border-rose-200/80 shadow-xs flex flex-col items-center justify-center max-w-md mx-auto ${className}`}>
-      <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
-        <AlertTriangle className="w-6 h-6" />
+    <div
+      className={`p-8 sm:p-10 text-center rounded-2xl border border-red-200 bg-red-50/50 flex flex-col items-center justify-center max-w-lg mx-auto ${className}`}
+      role="alert"
+    >
+      <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-3.5">
+        <AlertCircle className="w-6 h-6" />
       </div>
-      <h3 className="text-base font-bold text-rose-900 mb-1">{title}</h3>
-      <p className="text-xs text-rose-700 max-w-sm mb-6 leading-relaxed">{message}</p>
+
+      <h3 className="text-sm sm:text-base font-bold text-red-900 mb-1">{title}</h3>
+      <p className="text-xs text-red-700/80 max-w-sm leading-relaxed mb-5">{message}</p>
+
       {onRetry && (
-        <Button
-          size="sm"
-          variant="danger"
+        <button
+          type="button"
           onClick={onRetry}
-          leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+          className="btn bg-red-600 hover:bg-red-700 text-white text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm"
         >
-          Try Again
-        </Button>
+          <RotateCcw className="w-3.5 h-3.5" />
+          {retryLabel}
+        </button>
       )}
     </div>
   );

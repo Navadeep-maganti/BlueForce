@@ -1,0 +1,25 @@
+{
+  "title": "कार्यबल और भर्ती एनालिटिक्स",
+  "subtitle": "उम्मीदवार मिलान, भर्ती समय और क्षेत्रीय कौशल मांग पर रीयल-टाइम मेट्रिक्स।",
+  "metrics": {
+    "totalOpenings": "कुल पोस्ट की गई नौकरियाँ",
+    "totalApplications": "कुल प्राप्त आवेदन",
+    "avgTimeToHire": "औसत भर्ती समय",
+    "hireConversion": "भर्ती रूपांतरण दर",
+    "avgTrustScore": "औसत उम्मीदवार ट्रस्ट स्कोर",
+    "activeWorkers": "सक्रिय सत्यापित कर्मचारी"
+  },
+  "charts": {
+    "applicationFunnel": "भर्ती फ़नल चरण",
+    "demandByTrade": "ट्रेड कौशल मांग बनाम आपूर्ति",
+    "regionalDistribution": "भौगोलिक उम्मीदवार वितरण",
+    "monthlyHires": "मासिक नियुक्तियाँ"
+  },
+  "reports": {
+    "exportReport": "एनालिटिक्स रिपोर्ट निर्यात करें (PDF/CSV)",
+    "dateRange": "तिथि सीमा",
+    "last30Days": "पिछले 30 दिन",
+    "lastQuarter": "पिछली तिमाही",
+    "thisYear": "इस वर्ष"
+  }
+}

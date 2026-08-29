@@ -1,0 +1,49 @@
+{
+  "overview": "నియామక సారాంశం",
+  "welcomeTitle": "ఎంటర్‌ప్రైజ్ నియామక కేంద్రం",
+  "postNewJob": "కొత్త ఉద్యోగాన్ని పోస్ట్ చేయండి",
+  "activeJobs": "క్రియాశీల ఉద్యోగాలు",
+  "totalApplications": "మొత్తం దరఖాస్తులు",
+  "shortlistedCandidates": "ఎంపిక జాబితా",
+  "interviewsScheduled": "షెడ్యూల్ చేసిన ఇంటర్వ్యూలు",
+  "offersMade": "ఆఫర్లు ఇచ్చారు",
+  "hiredCandidates": "నియమించారు",
+  "topCandidates": "ఉత్తమ సరిపోలిన అభ్యర్థులు",
+  "topCandidatesDesc": "ట్రేడ్ సర్టిఫికేషన్లు, ధృవీకరించిన అనుభవం మరియు 100-పాయింట్ల ట్రస్ట్ స్కోర్ ఆధారంగా AI మ్యాచ్.",
+  "viewPipeline": "పైప్‌లైన్ చూడండి",
+  "matchScore": "మ్యాచ్ స్కోర్",
+  "candidateSearch": "అభ్యర్థులను వెతకండి",
+  "pipelineTitle": "నియామక పైప్‌లైన్",
+  "stages": {
+    "applied": "దరఖాస్తు చేశారు ({{count}})",
+    "shortlisted": "ఎంపిక జాబితా ({{count}})",
+    "interview": "ఇంటర్వ్యూ ({{count}})",
+    "offer": "ఆఫర్ ({{count}})",
+    "hired": "నియమించారు ({{count}})",
+    "rejected": "తిరస్కరించబడింది ({{count}})"
+  },
+  "jobCreation": {
+    "title": "ఉద్యోగ అవకాశాన్ని సృష్టించండి",
+    "subtitle": "12,000+ సర్టిఫైడ్ టెక్నీషియన్లకు ధృవీకరించిన పారిశ్రామిక ఉద్యోగాన్ని ప్రచురించండి.",
+    "jobTitle": "ఉద్యోగ శీర్షిక",
+    "jobTitlePlaceholder": "ఉదా. సీనియర్ CNC లాత్ ఆపరేటర్",
+    "tradeCategory": "ట్రేడ్ వర్గం",
+    "vacancies": "ఖాళీల సంఖ్య",
+    "location": "ఉద్యోగ ప్రాంతం / నగరం",
+    "salaryMin": "కనీస నెలవారీ జీతం (₹)",
+    "salaryMax": "గరిష్ట నెలవారీ జీతం (₹)",
+    "minExperience": "కనీస అవసరమైన అనుభవం (సంవత్సరాలు)",
+    "certificationsRequired": "అవసరమైన సర్టిఫికేషన్లు",
+    "jobDescription": "వివరణాత్మక ఉద్యోగ వివరణ",
+    "jobDescriptionPlaceholder": "షిఫ్ట్ సమయాలు, మెషీన్ రకాలు, ఓవర్‌టైమ్ పాలసీ, ఆహారం/వసతి సౌకర్యాలను వివరించండి...",
+    "publishJob": "ఉద్యోగాన్ని ప్రచురించండి",
+    "saveDraft": "డ్రాఫ్ట్‌గా సేవ్ చేయండి",
+    "publishedSuccess": "ఉద్యోగ అవకాశం విజయవంతంగా ప్రచురించబడింది!"
+  },
+  "analytics": {
+    "title": "నియామకం & ప్రతిభ విశ్లేషణలు",
+    "timeToHire": "సగటు నియామక సమయం",
+    "verifiedRatio": "ధృవీకరించిన అభ్యర్థులు",
+    "applicationFunnel": "దరఖాస్తుల ఫన్నెల్"
+  }
+}

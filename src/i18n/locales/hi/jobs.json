@@ -1,0 +1,56 @@
+{
+  "searchPlaceholder": "ट्रेड, पद या मशीन कौशल द्वारा खोजें...",
+  "locationPlaceholder": "शहर, ज़िला या औद्योगिक क्षेत्र...",
+  "filterByTrade": "ट्रेड / उद्योग",
+  "filterByExperience": "अनुभव स्तर",
+  "filterBySalary": "न्यूनतम मासिक वेतन",
+  "filterByJobType": "कार्य प्रकार",
+  "allTrades": "सभी ट्रेड",
+  "allLocations": "सभी स्थान",
+  "anyExperience": "कोई भी अनुभव",
+  "fresher": "प्रारंभिक स्तर / फ्रेशर (0-1 वर्ष)",
+  "midLevel": "मध्यम स्तर (2-5 वर्ष)",
+  "seniorLevel": "वरिष्ठ स्तर (5+ वर्ष)",
+  "sortOptions": {
+    "label": "क्रमबद्ध करें",
+    "bestMatch": "सर्वश्रेष्ठ मिलान (AI स्कोर)",
+    "highestSalary": "उच्चतम वेतन",
+    "newest": "हाल ही में पोस्ट की गई",
+    "trustScore": "शीर्ष नियोक्ता ट्रस्ट"
+  },
+  "jobCard": {
+    "openings": "{{count}} रिक्तियाँ",
+    "perMonth": "प्रति माह",
+    "viewDetails": "विवरण देखें",
+    "quickApply": "त्वरित आवेदन",
+    "applied": "आवेदन किया जा चुका है",
+    "posted": "{{time}} पोस्ट किया गया",
+    "urgent": "तत्काल",
+    "verifiedCompany": "सत्यापित कंपनी"
+  },
+  "jobDetails": {
+    "aboutCompany": "कंपनी के बारे में",
+    "jobOverview": "नौकरी अवलोकन",
+    "responsibilities": "मुख्य जिम्मेदारियाँ",
+    "requirements": "कौशल और अनुभव आवश्यकताएँ",
+    "certifications": "पसंदीदा प्रमाण-पत्र",
+    "benefits": "लाभ और सुविधाएँ",
+    "salaryAndPerks": "वेतन और सुविधाएँ",
+    "foodAndAccom": "भोजन और आवास",
+    "providentFund": "PF और ESI उपलब्ध",
+    "overtime": "ओवरटाइम उपलब्ध",
+    "transport": "परिवहन / कैब सुविधा",
+    "applyNow": "इस नौकरी के लिए आवेदन करें",
+    "matchAnalysis": "मिलान स्कोर विश्लेषण",
+    "dynamicNotice": "नोट: नौकरी का विवरण और आवश्यकताएँ नियोक्ता द्वारा सीधे प्रदान की जाती हैं।"
+  },
+  "voiceModal": {
+    "title": "वॉइस जॉब सर्च",
+    "listening": "सुन रहे हैं… हिंदी, तेलुगु या अंग्रेज़ी में बोलें",
+    "clickToSpeak": "बोलने के लिए माइक्रोफ़ोन दबाएँ",
+    "samplePrompt": "उदाहरण: “विजयवाड़ा के पास 25 हज़ार से ऊपर इलेक्ट्रीशियन का काम चाहिए।”",
+    "orTry": "या इन वॉइस नमूनों को आज़माएँ:",
+    "searchResultBtn": "नौकरियाँ खोजें",
+    "analyzingVoice": "वॉइस इनपुट को प्रोसेस किया जा रहा है…"
+  }
+}

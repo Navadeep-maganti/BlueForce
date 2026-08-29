@@ -11,6 +11,9 @@ import {
   NotificationItem,
   ProofOfWorkItem,
   SkillItem,
+  CertificationItem,
+  WorkExperienceItem,
+  TrustScoreBreakdown,
   UserRole,
 } from '../types';
 import {
@@ -26,22 +29,191 @@ import {
 } from './mockData';
 import { authApi, RegisterPayload } from './api/authApi';
 import { workerApi } from './api/workerApi';
-import { jobApi, JobFilterParams } from './api/jobApi';
+import { jobApi } from './api/jobApi';
 import { applicationApi } from './api/applicationApi';
 import { verificationApi } from './api/verificationApi';
 import { notificationApi } from './api/notificationApi';
 
 const STORAGE_KEYS = {
-  USER: 'kaushal_current_user',
-  WORKER_PROFILE: 'kaushal_worker_profile',
-  CANDIDATES: 'kaushal_candidates',
-  EMPLOYER_PROFILE: 'kaushal_employer_profile',
-  JOBS: 'kaushal_jobs',
-  APPLICATIONS: 'kaushal_applications',
-  VERIFICATIONS: 'kaushal_verifications',
-  REPORTS: 'kaushal_reports',
-  NOTIFICATIONS: 'kaushal_notifications',
+  CURRENT_USER: 'kaushal_current_user',
+  ALL_USERS: 'kaushal_all_users_db',
+  USER_DATA_PREFIX: 'kaushal_userdata_',
+  GLOBAL_JOBS: 'kaushal_global_jobs',
+  GLOBAL_VERIFICATIONS: 'kaushal_global_verifications',
+  GLOBAL_REPORTS: 'kaushal_global_reports',
   TOKENS: 'kc_tokens',
+};
+
+// Helper to calculate dynamic trust score based on actual items on file
+export const calculateDynamicTrustScore = (
+  profile: WorkerProfile,
+  isUserVerified: boolean
+): TrustScoreBreakdown => {
+  const identityScore = isUserVerified ? 20 : 0;
+  const verifiedCertsCount = profile.certifications.filter(
+    (c) => c.verificationStatus === 'verified'
+  ).length;
+  const totalCertsCount = profile.certifications.length;
+  const certsScore = Math.min(
+    20,
+    totalCertsCount > 0 ? 5 + verifiedCertsCount * 8 : 0
+  );
+
+  const testedSkillsCount = profile.skills.filter((s) => s.isVerified).length;
+  const skillsScore = Math.min(
+    20,
+    profile.skills.length * 4 + testedSkillsCount * 3
+  );
+
+  const verifiedExpYears = profile.experience.reduce(
+    (acc, exp) => acc + (exp.isEmployerVerified ? 2 : 1),
+    0
+  );
+  const expScore = Math.min(15, verifiedExpYears * 4);
+
+  const reviewsCount = profile.reviews?.length || 0;
+  const reviewsScore = Math.min(15, reviewsCount * 5);
+
+  const powCount = profile.proofOfWork?.length || 0;
+  const powScore = Math.min(10, powCount * 3);
+
+  const total =
+    identityScore + certsScore + skillsScore + expScore + reviewsScore + powScore;
+
+  return {
+    total: Math.min(100, total),
+    identity: {
+      score: identityScore,
+      max: 20,
+      verified: isUserVerified,
+      label: 'Aadhaar eKYC',
+    },
+    certifications: {
+      score: certsScore,
+      max: 20,
+      verifiedCount: verifiedCertsCount,
+      label: 'Trade Credentials',
+    },
+    skills: {
+      score: skillsScore,
+      max: 20,
+      testedCount: testedSkillsCount,
+      label: 'Technical Competency',
+    },
+    experience: {
+      score: expScore,
+      max: 15,
+      verifiedYears: verifiedExpYears,
+      label: 'Plant Experience',
+    },
+    employerReviews: {
+      score: reviewsScore,
+      max: 15,
+      avgRating: 5.0,
+      reviewCount: reviewsCount,
+      label: 'Supervisor Reviews',
+    },
+    completedJobs: {
+      score: powScore,
+      max: 10,
+      completedCount: powCount,
+      label: 'Proof of Work',
+    },
+  };
+};
+
+export const calculateDynamicProfileStrength = (profile: WorkerProfile): number => {
+  let score = 20; // baseline for account registration
+  if (profile.fullName && profile.fullName.trim().length > 2) score += 10;
+  if (profile.bio && profile.bio.trim().length > 10) score += 15;
+  if (profile.skills && profile.skills.length > 0) score += 20;
+  if (profile.certifications && profile.certifications.length > 0) score += 15;
+  if (profile.experience && profile.experience.length > 0) score += 10;
+  if (profile.proofOfWork && profile.proofOfWork.length > 0) score += 10;
+  return Math.min(100, score);
+};
+
+export const createCleanWorkerProfile = (user: User, trade?: string): WorkerProfile => {
+  const profile: WorkerProfile = {
+    id: `worker_${user.id}`,
+    userId: user.id,
+    fullName: user.name,
+    primaryTrade: trade || 'Skilled Technician',
+    tagline: trade ? `Certified ${trade}` : 'Skilled Technical Professional',
+    bio: '',
+    location: user.location || 'Vijayawada, AP',
+    city: user.location ? user.location.split(',')[0].trim() : 'Vijayawada',
+    state: 'Andhra Pradesh',
+    pinCode: '520007',
+    preferredRadiusKm: 50,
+    phone: user.phone,
+    email: user.email,
+    avatarUrl: user.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
+    availability: 'available_now',
+    expectedSalaryMonthly: { min: 25000, max: 35000 },
+    yearsOfExperience: 0,
+    education: 'ITI / Diploma',
+    languages: ['Telugu', 'English', 'Hindi'],
+    skills: trade
+      ? [
+          {
+            id: `sk_${Date.now()}`,
+            name: trade,
+            category: 'Primary Trade',
+            level: 3,
+            yearsExperience: 1,
+            isVerified: false,
+          },
+        ]
+      : [],
+    certifications: [],
+    experience: [],
+    proofOfWork: [],
+    reviews: [],
+    recommendedSkills: [
+      { skill: 'PLC Automation & Ladder Logic', unlocksJobsCount: 18, avgSalaryBoost: '+₹6,000/mo' },
+      { skill: 'Solar Inverter Troubleshooting', unlocksJobsCount: 14, avgSalaryBoost: '+₹4,500/mo' },
+    ],
+    bookmarkedJobIds: [],
+    profileStrengthPercent: 30,
+    trustScore: {
+      total: user.isVerified ? 20 : 0,
+      identity: { score: user.isVerified ? 20 : 0, max: 20, verified: user.isVerified, label: 'Aadhaar eKYC' },
+      certifications: { score: 0, max: 20, verifiedCount: 0, label: 'Trade Credentials' },
+      skills: { score: trade ? 4 : 0, max: 20, testedCount: 0, label: 'Technical Competency' },
+      experience: { score: 0, max: 15, verifiedYears: 0, label: 'Plant Experience' },
+      employerReviews: { score: 0, max: 15, avgRating: 0, reviewCount: 0, label: 'Supervisor Reviews' },
+      completedJobs: { score: 0, max: 10, completedCount: 0, label: 'Proof of Work' },
+    },
+  };
+
+  profile.trustScore = calculateDynamicTrustScore(profile, user.isVerified);
+  profile.profileStrengthPercent = calculateDynamicProfileStrength(profile);
+  return profile;
+};
+
+export const createCleanEmployerProfile = (user: User, companyName?: string, tradeIndustry?: string): EmployerProfile => {
+  return {
+    id: `emp_${user.id}`,
+    userId: user.id,
+    companyName: companyName || user.name || 'Industrial Enterprise',
+    tradeIndustry: tradeIndustry || 'Manufacturing & Industrial Engineering',
+    tagline: 'Verified Industrial Employer',
+    description: '',
+    gstOrCinNumber: '',
+    location: user.location || 'Vijayawada, AP',
+    city: user.location ? user.location.split(',')[0].trim() : 'Vijayawada',
+    state: 'Andhra Pradesh',
+    logoUrl: user.avatarUrl || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200',
+    isVerified: user.isVerified,
+    verificationBadge: 'Verified Enterprise',
+    employeeCount: '50-200',
+    establishedYear: 2018,
+    contactPerson: user.name,
+    contactEmail: user.email,
+    contactPhone: user.phone,
+    bookmarkedWorkerIds: [],
+  };
 };
 
 class Store {
@@ -52,64 +224,134 @@ class Store {
   candidates: WorkerProfile[] = mockCandidates;
   employerProfile: EmployerProfile = mockEmployerProfile;
   jobs: Job[] = mockJobs;
-  applications: Application[] = mockApplications;
+  applications: Application[] = [];
   verifications: VerificationDocument[] = mockVerifications;
   reports: PlatformReport[] = mockReports;
-  notifications: NotificationItem[] = mockNotifications;
+  notifications: NotificationItem[] = [];
   isLoading: boolean = false;
   authError: string | null = null;
 
   constructor() {
-    this.loadFromStorage();
-    this.restoreSession();
+    this.loadGlobalData();
+    this.loadCurrentUserSession();
   }
 
-  private loadFromStorage() {
+  private loadGlobalData() {
     try {
-      const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
-      this.currentUser = savedUser ? JSON.parse(savedUser) : mockUsers[0]; // default to worker
-
-      const savedWorker = localStorage.getItem(STORAGE_KEYS.WORKER_PROFILE);
-      this.workerProfile = savedWorker ? JSON.parse(savedWorker) : defaultWorkerProfile;
-
-      const savedCandidates = localStorage.getItem(STORAGE_KEYS.CANDIDATES);
-      this.candidates = savedCandidates ? JSON.parse(savedCandidates) : mockCandidates;
-
-      const savedEmployer = localStorage.getItem(STORAGE_KEYS.EMPLOYER_PROFILE);
-      this.employerProfile = savedEmployer ? JSON.parse(savedEmployer) : mockEmployerProfile;
-
-      const savedJobs = localStorage.getItem(STORAGE_KEYS.JOBS);
+      const savedJobs = localStorage.getItem(STORAGE_KEYS.GLOBAL_JOBS);
       this.jobs = savedJobs ? JSON.parse(savedJobs) : mockJobs;
 
-      const savedApps = localStorage.getItem(STORAGE_KEYS.APPLICATIONS);
-      this.applications = savedApps ? JSON.parse(savedApps) : mockApplications;
-
-      const savedVerifs = localStorage.getItem(STORAGE_KEYS.VERIFICATIONS);
+      const savedVerifs = localStorage.getItem(STORAGE_KEYS.GLOBAL_VERIFICATIONS);
       this.verifications = savedVerifs ? JSON.parse(savedVerifs) : mockVerifications;
 
-      const savedReports = localStorage.getItem(STORAGE_KEYS.REPORTS);
+      const savedReports = localStorage.getItem(STORAGE_KEYS.GLOBAL_REPORTS);
       this.reports = savedReports ? JSON.parse(savedReports) : mockReports;
-
-      const savedNotifs = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-      this.notifications = savedNotifs ? JSON.parse(savedNotifs) : mockNotifications;
     } catch (e) {
-      console.error('Error loading state from localStorage:', e);
+      console.error('Error loading global data:', e);
     }
   }
 
-  private saveToStorage() {
+  private saveGlobalData() {
     try {
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(this.currentUser));
-      localStorage.setItem(STORAGE_KEYS.WORKER_PROFILE, JSON.stringify(this.workerProfile));
-      localStorage.setItem(STORAGE_KEYS.CANDIDATES, JSON.stringify(this.candidates));
-      localStorage.setItem(STORAGE_KEYS.EMPLOYER_PROFILE, JSON.stringify(this.employerProfile));
-      localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(this.jobs));
-      localStorage.setItem(STORAGE_KEYS.APPLICATIONS, JSON.stringify(this.applications));
-      localStorage.setItem(STORAGE_KEYS.VERIFICATIONS, JSON.stringify(this.verifications));
-      localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(this.reports));
-      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(this.notifications));
+      localStorage.setItem(STORAGE_KEYS.GLOBAL_JOBS, JSON.stringify(this.jobs));
+      localStorage.setItem(STORAGE_KEYS.GLOBAL_VERIFICATIONS, JSON.stringify(this.verifications));
+      localStorage.setItem(STORAGE_KEYS.GLOBAL_REPORTS, JSON.stringify(this.reports));
     } catch (e) {
-      console.error('Error saving state to localStorage:', e);
+      console.error('Error saving global data:', e);
+    }
+  }
+
+  private loadCurrentUserSession() {
+    try {
+      const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      if (savedUser) {
+        this.currentUser = JSON.parse(savedUser);
+        this.loadUserData(this.currentUser!.id, this.currentUser!.role);
+      } else {
+        // No user logged in by default - clean guest visitor state
+        this.currentUser = null;
+        this.applications = [];
+        this.notifications = [];
+      }
+    } catch (e) {
+      console.error('Error loading current user session:', e);
+      this.currentUser = null;
+      this.applications = [];
+      this.notifications = [];
+    }
+  }
+
+  private loadUserData(userId: string, role: UserRole) {
+    try {
+      const key = `${STORAGE_KEYS.USER_DATA_PREFIX}${userId}`;
+      const savedDataStr = localStorage.getItem(key);
+
+      if (savedDataStr) {
+        const data = JSON.parse(savedDataStr);
+        if (role === 'worker') {
+          this.workerProfile = data.workerProfile || createCleanWorkerProfile(this.currentUser!);
+          this.applications = data.applications || [];
+        } else if (role === 'employer') {
+          this.employerProfile = data.employerProfile || createCleanEmployerProfile(this.currentUser!);
+          this.applications = data.applications || [];
+        }
+        this.notifications = data.notifications || [];
+      } else {
+        // If this is a mock user, load mock data, otherwise create clean profile!
+        const isMockWorker = userId === '1' || userId === 'worker_1';
+        const isMockEmployer = userId === '2' || userId === 'employer_1';
+
+        if (isMockWorker) {
+          this.workerProfile = defaultWorkerProfile;
+          this.applications = mockApplications;
+          this.notifications = mockNotifications;
+        } else if (isMockEmployer) {
+          this.employerProfile = mockEmployerProfile;
+          this.applications = mockApplications;
+          this.notifications = mockNotifications;
+        } else {
+          // BRAND NEW USER: Clean empty state
+          if (role === 'worker') {
+            this.workerProfile = createCleanWorkerProfile(this.currentUser!);
+            this.applications = [];
+          } else if (role === 'employer') {
+            this.employerProfile = createCleanEmployerProfile(this.currentUser!);
+            this.applications = [];
+          }
+          this.notifications = [
+            {
+              id: `notif_${Date.now()}`,
+              userId: userId,
+              title: 'Welcome to KaushalConnect',
+              message: 'Your account is ready. Complete your profile to boost your workforce trust score.',
+              type: 'system',
+              timestamp: 'Just now',
+              isRead: false,
+            },
+          ];
+        }
+        this.saveCurrentUserData();
+      }
+    } catch (e) {
+      console.error('Error loading user specific data:', e);
+    }
+  }
+
+  private saveCurrentUserData() {
+    if (!this.currentUser) return;
+    try {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(this.currentUser));
+
+      const key = `${STORAGE_KEYS.USER_DATA_PREFIX}${this.currentUser.id}`;
+      const dataToSave = {
+        workerProfile: this.currentUser.role === 'worker' ? this.workerProfile : undefined,
+        employerProfile: this.currentUser.role === 'employer' ? this.employerProfile : undefined,
+        applications: this.applications,
+        notifications: this.notifications,
+      };
+      localStorage.setItem(key, JSON.stringify(dataToSave));
+    } catch (e) {
+      console.error('Error saving user data:', e);
     }
     this.notify();
   }
@@ -143,173 +385,23 @@ class Store {
           isVerified: u.is_verified,
           createdAt: u.created_at,
         };
-        if (u.role === 'worker') {
-          await this.fetchWorkerProfile();
-        }
-        this.saveToStorage();
+        this.loadUserData(this.currentUser.id, this.currentUser.role);
+        this.notify();
       }
     } catch (err) {
-      console.log('Session restore info: working in hybrid/local mode');
+      console.log('Session restore info: working in local persistent mode');
     }
-  }
-
-  async fetchWorkerProfile() {
-    try {
-      const res = await workerApi.getMyProfile();
-      if (res?.success && res?.data) {
-        const d = res.data;
-        if (d.profile) {
-          this.workerProfile.fullName = d.profile.full_name;
-          this.workerProfile.primaryTrade = d.profile.primary_trade;
-          this.workerProfile.tagline = d.profile.tagline || this.workerProfile.tagline;
-          this.workerProfile.bio = d.profile.bio || this.workerProfile.bio;
-          this.workerProfile.location = d.profile.location;
-          this.workerProfile.city = d.profile.city;
-          this.workerProfile.yearsOfExperience = d.profile.years_of_experience;
-          this.workerProfile.availability = d.profile.availability;
-          this.workerProfile.expectedSalaryMonthly = d.profile.expected_salary_min || 28000;
-          this.workerProfile.profileStrengthPercent = d.profile.profile_strength_percent || 88;
-        }
-        if (d.trust_score?.breakdown) {
-          const tb = d.trust_score.breakdown;
-          this.workerProfile.trustScore = {
-            total: d.trust_score.total,
-            identity: { score: tb.identity.score, max: 20, verified: true, label: tb.identity.label },
-            certifications: { score: tb.certifications.score, max: 20, verifiedCount: tb.certifications.verified_count, label: 'Government NCVT Certs' },
-            skills: { score: tb.skills.score, max: 20, testedCount: tb.skills.tested_count, label: 'Verified Trade Tests' },
-            experience: { score: tb.experience.score, max: 15, verifiedYears: tb.experience.verified_years, label: 'Plant Experience' },
-            employerReviews: { score: tb.employer_reviews.score, max: 15, avgRating: tb.employer_reviews.avg_rating, reviewCount: tb.employer_reviews.review_count, label: 'Supervisor Feedback' },
-            completedJobs: { score: tb.completed_jobs.score, max: 10, completedCount: tb.completed_jobs.completed_count, label: 'Photo Proof Works' },
-          };
-        }
-        if (d.skills && d.skills.length > 0) {
-          this.workerProfile.skills = d.skills.map((s: any) => ({
-            id: String(s.id),
-            name: s.skill_name,
-            category: s.category || 'Electrical',
-            level: s.level || 5,
-            yearsExperience: s.years_experience || 4,
-            isVerified: s.is_verified,
-            verificationSource: s.verification_source,
-          }));
-        }
-        if (d.proof_of_work && d.proof_of_work.length > 0) {
-          this.workerProfile.proofOfWork = d.proof_of_work.map((p: any) => ({
-            id: String(p.id),
-            title: p.title,
-            description: p.description,
-            category: p.category,
-            images: p.images || [],
-            skillsDemonstrated: p.skills_demonstrated || [],
-            clientOrEmployer: p.client_or_employer,
-            location: p.location,
-            completionDate: p.completion_date,
-            isVerified: p.is_verified,
-            verifiedBy: p.verified_by,
-            rating: p.rating || 5,
-          }));
-        }
-        this.saveToStorage();
-      }
-    } catch (e) {
-      console.log('Worker profile fetch fallback to local cache');
-    }
-  }
-
-  async fetchCandidates(params: any = {}) {
-    try {
-      const res = await workerApi.discoverWorkers(params);
-      if (res?.results && res.results.length > 0) {
-        this.candidates = res.results.map((w: any) => ({
-          id: String(w.id),
-          userId: String(w.id),
-          fullName: w.full_name,
-          primaryTrade: w.primary_trade,
-          tagline: w.tagline || 'Certified Industrial Trade Technician',
-          bio: 'Verified technical candidate with government certification and plant experience.',
-          location: w.location || 'Vijayawada, AP',
-          city: w.city || 'Vijayawada',
-          avatarUrl: w.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-          yearsOfExperience: w.years_of_experience || 3,
-          availability: w.availability || 'available_now',
-          expectedSalaryMonthly: w.expected_salary_min || 28000,
-          profileStrengthPercent: 88,
-          trustScore: {
-            total: w.trust_score_total || 85,
-            identity: { score: 20, max: 20, verified: w.is_verified, label: 'Aadhaar eKYC' },
-            certifications: { score: 18, max: 20, verifiedCount: w.verified_certs_count || 2, label: 'NCVT Certs' },
-            skills: { score: 18, max: 20, testedCount: 4, label: 'Verified Skills' },
-            experience: { score: 14, max: 15, verifiedYears: w.years_of_experience || 3, label: 'Plant Tenure' },
-            employerReviews: { score: 10, max: 15, avgRating: 5.0, reviewCount: 1, label: 'Feedback' },
-            completedJobs: { score: 8, max: 10, completedCount: w.proof_of_work_count || 1, label: 'Proof Works' },
-          },
-          skills: (w.top_skills || ['Electrical', 'PLC', 'Maintenance']).map((name: string, i: number) => ({
-            id: `sk_${i}`,
-            name,
-            category: 'Industrial',
-            level: 5,
-            yearsExperience: 4,
-            isVerified: true,
-          })),
-          certifications: [],
-          experience: [],
-          proofOfWork: [],
-          reviews: [],
-          recommendedSkills: [],
-          bookmarkedJobIds: [],
-        }));
-        this.saveToStorage();
-      }
-    } catch (e) {
-      console.log('Candidates loaded from cache/fallback');
-    }
-  }
-
-  async fetchNotifications() {
-    try {
-      const res = await notificationApi.getNotifications();
-      if (res?.data?.notifications) {
-        this.notifications = res.data.notifications.map((n: any) => ({
-          id: String(n.id),
-          userId: this.currentUser?.id || 'worker_1',
-          title: n.title,
-          message: n.message,
-          timestamp: n.timestamp || 'Just now',
-          isRead: n.is_read,
-          type: n.type || n.notification_type || 'general',
-          actionUrl: n.action_url,
-        }));
-        this.saveToStorage();
-      }
-    } catch (e) {
-      console.log('Notifications loaded from cache');
-    }
-  }
-
-  async markNotificationRead(id: string) {
-    const notif = this.notifications.find((n) => n.id === id);
-    if (notif) {
-      notif.isRead = true;
-      this.saveToStorage();
-    }
-    const numId = parseInt(id.replace(/\D/g, ''), 10);
-    if (numId) {
-      notificationApi.markAsRead(numId).catch(() => {});
-    }
-  }
-
-  async markAllNotificationsRead() {
-    this.notifications.forEach((n) => {
-      n.isRead = true;
-    });
-    this.saveToStorage();
-    notificationApi.markAllAsRead().catch(() => {});
   }
 
   async login(usernameOrEmail: string, password: string): Promise<{ success: boolean; message: string; user?: User }> {
     this.isLoading = true;
     this.authError = null;
     this.notify();
+
+    // Check if this is a known demo account
+    const isWorkerDemo = usernameOrEmail.toLowerCase().includes('worker');
+    const isEmployerDemo = usernameOrEmail.toLowerCase().includes('employer');
+    const isAdminDemo = usernameOrEmail.toLowerCase().includes('admin');
 
     try {
       const res = await authApi.login(usernameOrEmail, password);
@@ -329,25 +421,42 @@ class Store {
           createdAt: u.created_at,
         };
 
-        if (u.role === 'worker') {
-          await this.fetchWorkerProfile();
-        } else if (u.role === 'employer' && u.profile_data) {
-          this.employerProfile.companyName = u.profile_data.company_name;
-          this.employerProfile.tradeIndustry = u.profile_data.trade_industry;
-        }
-
-        this.saveToStorage();
+        this.loadUserData(this.currentUser.id, this.currentUser.role);
         this.isLoading = false;
+        this.notify();
         return { success: true, message: 'Login successful', user: this.currentUser };
       }
-      throw new Error(res?.message || 'Login failed');
-    } catch (err: any) {
-      this.isLoading = false;
-      const errorMsg = err.response?.data?.message || err.message || 'Invalid credentials.';
-      this.authError = errorMsg;
-      this.notify();
-      return { success: false, message: errorMsg };
+    } catch (err) {
+      // Fall back to local DB check
     }
+
+    // Local DB search
+    const allUsersDbStr = localStorage.getItem(STORAGE_KEYS.ALL_USERS);
+    const allUsers: User[] = allUsersDbStr ? JSON.parse(allUsersDbStr) : mockUsers;
+
+    const matchedUser = allUsers.find(
+      (u) => u.email.toLowerCase() === usernameOrEmail.toLowerCase()
+    );
+
+    if (matchedUser) {
+      this.currentUser = matchedUser;
+      this.loadUserData(this.currentUser.id, this.currentUser.role);
+      this.isLoading = false;
+      this.notify();
+      return { success: true, message: 'Login successful', user: this.currentUser };
+    }
+
+    if (isWorkerDemo || isEmployerDemo || isAdminDemo) {
+      const role: UserRole = isWorkerDemo ? 'worker' : isEmployerDemo ? 'employer' : 'admin';
+      this.loginAs(role);
+      this.isLoading = false;
+      return { success: true, message: 'Signed in with demo persona', user: this.currentUser! };
+    }
+
+    this.isLoading = false;
+    this.authError = 'Invalid email or password.';
+    this.notify();
+    return { success: false, message: 'Invalid credentials.' };
   }
 
   async register(payload: RegisterPayload): Promise<{ success: boolean; message: string; user?: User }> {
@@ -355,44 +464,73 @@ class Store {
     this.authError = null;
     this.notify();
 
+    let newUserId = `user_${Date.now()}`;
+    let isVerified = false;
+
     try {
       const res = await authApi.register(payload);
       if (res?.success && res?.data) {
         const { tokens, user: u } = res.data;
         localStorage.setItem(STORAGE_KEYS.TOKENS, JSON.stringify(tokens));
-
-        this.currentUser = {
-          id: String(u.id),
-          name: u.display_name || u.username,
-          email: u.email,
-          phone: u.phone || payload.phone || '+91 98480 12345',
-          role: u.role,
-          location: u.location || payload.location || 'Vijayawada, AP',
-          avatarUrl: u.avatar_url,
-          isVerified: u.is_verified,
-          createdAt: u.created_at,
-        };
-
-        if (u.role === 'worker' && payload.full_name) {
-          this.workerProfile.fullName = payload.full_name;
-          this.workerProfile.primaryTrade = payload.primary_trade || 'Industrial Electrician';
-        } else if (u.role === 'employer' && payload.company_name) {
-          this.employerProfile.companyName = payload.company_name;
-          this.employerProfile.tradeIndustry = payload.trade_industry || 'Precision Engineering';
-        }
-
-        this.saveToStorage();
-        this.isLoading = false;
-        return { success: true, message: 'Account created successfully', user: this.currentUser };
+        newUserId = String(u.id);
+        isVerified = u.is_verified;
       }
-      throw new Error(res?.message || 'Registration failed');
-    } catch (err: any) {
-      this.isLoading = false;
-      const errorMsg = err.response?.data?.message || err.message || 'Registration failed.';
-      this.authError = errorMsg;
-      this.notify();
-      return { success: false, message: errorMsg };
+    } catch (err) {
+      console.log('Registering in local persistent storage');
     }
+
+    const newUser: User = {
+      id: newUserId,
+      name: payload.full_name || payload.company_name || payload.email.split('@')[0],
+      email: payload.email,
+      phone: payload.phone || '+91 98480 12345',
+      role: payload.role,
+      location: payload.location || 'Vijayawada, AP',
+      avatarUrl:
+        payload.role === 'worker'
+          ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200'
+          : 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200',
+      isVerified: isVerified,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save to all users DB
+    const allUsersDbStr = localStorage.getItem(STORAGE_KEYS.ALL_USERS);
+    const allUsers: User[] = allUsersDbStr ? JSON.parse(allUsersDbStr) : [...mockUsers];
+    allUsers.push(newUser);
+    localStorage.setItem(STORAGE_KEYS.ALL_USERS, JSON.stringify(allUsers));
+
+    this.currentUser = newUser;
+
+    // Create 100% clean profile with ONLY the user's provided input
+    if (newUser.role === 'worker') {
+      this.workerProfile = createCleanWorkerProfile(newUser, payload.primary_trade);
+      this.applications = [];
+    } else if (newUser.role === 'employer') {
+      this.employerProfile = createCleanEmployerProfile(
+        newUser,
+        payload.company_name,
+        payload.trade_industry
+      );
+      this.applications = [];
+    }
+
+    this.notifications = [
+      {
+        id: `notif_${Date.now()}`,
+        userId: newUser.id,
+        title: 'Account Created',
+        message: 'Welcome to KaushalConnect. Start adding your skills and work history.',
+        type: 'system',
+        timestamp: 'Just now',
+        isRead: false,
+      },
+    ];
+
+    this.saveCurrentUserData();
+    this.isLoading = false;
+    this.notify();
+    return { success: true, message: 'Account created successfully', user: this.currentUser };
   }
 
   async logout() {
@@ -404,42 +542,235 @@ class Store {
       } catch (e) {}
     }
     localStorage.removeItem(STORAGE_KEYS.TOKENS);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     this.currentUser = null;
-    this.saveToStorage();
+    this.notifications = [];
+    this.applications = [];
+    this.notify();
   }
 
   loginAs(role: UserRole) {
-    const foundUser = mockUsers.find((u) => u.role === role);
-    if (foundUser) {
-      this.currentUser = foundUser;
-      this.saveToStorage();
-    }
+    const foundUser = mockUsers.find((u) => u.role === role) || mockUsers[0];
+    this.currentUser = foundUser;
+    this.loadUserData(this.currentUser.id, this.currentUser.role);
+    this.saveCurrentUserData();
+    this.notify();
   }
 
-  loginWithCustom(name: string, email: string, role: UserRole) {
-    this.currentUser = {
-      id: `user_${Date.now()}`,
-      name,
-      email,
-      phone: '+91 98765 43210',
-      role,
-      location: 'Vijayawada, AP',
-      isVerified: true,
-      createdAt: new Date().toISOString(),
+  // Worker Profile Updates & Additions
+  updateWorkerProfile(data: Partial<WorkerProfile>) {
+    this.workerProfile = {
+      ...this.workerProfile,
+      ...data,
     };
-    this.saveToStorage();
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
   }
 
-  // Worker Actions
+  addSkill(skillData: Omit<SkillItem, 'id'>) {
+    const newSkill: SkillItem = {
+      ...skillData,
+      id: `sk_${Date.now()}`,
+    };
+    this.workerProfile.skills = [...this.workerProfile.skills, newSkill];
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  removeSkill(skillId: string) {
+    this.workerProfile.skills = this.workerProfile.skills.filter((s) => s.id !== skillId);
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  addCertification(certData: Omit<CertificationItem, 'id' | 'verificationStatus'>) {
+    const newCert: CertificationItem = {
+      ...certData,
+      id: `cert_${Date.now()}`,
+      verificationStatus: 'pending',
+    };
+    this.workerProfile.certifications = [...this.workerProfile.certifications, newCert];
+
+    // Add to global verification audit queue
+    const newVerifDoc: VerificationDocument = {
+      id: `vdoc_${Date.now()}`,
+      workerOrEmployerId: this.workerProfile.id,
+      entityName: this.workerProfile.fullName,
+      entityType: 'worker',
+      docType: 'ITI Diploma',
+      docNumber: certData.credentialId || 'NSDC-CERT-NEW',
+      submittedAt: 'Just now',
+      status: 'pending',
+      fileUrl: certData.documentUrl || 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600',
+    };
+    this.verifications = [newVerifDoc, ...this.verifications];
+    this.saveGlobalData();
+
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  removeCertification(certId: string) {
+    this.workerProfile.certifications = this.workerProfile.certifications.filter(
+      (c) => c.id !== certId
+    );
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  addExperience(expData: Omit<WorkExperienceItem, 'id' | 'isEmployerVerified'>) {
+    const newExp: WorkExperienceItem = {
+      ...expData,
+      id: `exp_${Date.now()}`,
+      isEmployerVerified: false,
+    };
+    this.workerProfile.experience = [...this.workerProfile.experience, newExp];
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  removeExperience(expId: string) {
+    this.workerProfile.experience = this.workerProfile.experience.filter((e) => e.id !== expId);
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  addProofOfWork(powData: Omit<ProofOfWorkItem, 'id'>) {
+    const newPow: ProofOfWorkItem = {
+      ...powData,
+      id: `pow_${Date.now()}`,
+    };
+    this.workerProfile.proofOfWork = [...this.workerProfile.proofOfWork, newPow];
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  removeProofOfWork(powId: string) {
+    this.workerProfile.proofOfWork = this.workerProfile.proofOfWork.filter((p) => p.id !== powId);
+    this.workerProfile.trustScore = calculateDynamicTrustScore(
+      this.workerProfile,
+      this.currentUser?.isVerified ?? false
+    );
+    this.workerProfile.profileStrengthPercent = calculateDynamicProfileStrength(
+      this.workerProfile
+    );
+    this.saveCurrentUserData();
+  }
+
+  // Employer Profile & Job Posting
+  updateEmployerProfile(data: Partial<EmployerProfile>) {
+    this.employerProfile = {
+      ...this.employerProfile,
+      ...data,
+    };
+    this.saveCurrentUserData();
+  }
+
+  createJob(jobData: Partial<Job>): { success: boolean; message: string; job?: Job } {
+    if (!this.currentUser || this.currentUser.role !== 'employer') {
+      return { success: false, message: 'You must be logged in as an Employer to post job openings.' };
+    }
+
+    const newJob: Job = {
+      id: `job_${Date.now()}`,
+      employerId: this.employerProfile.id,
+      companyName: this.employerProfile.companyName,
+      companyLogoUrl: this.employerProfile.logoUrl,
+      isCompanyVerified: this.employerProfile.isVerified,
+      title: jobData.title || 'Technical Specialist',
+      tradeCategory: jobData.tradeCategory || this.employerProfile.tradeIndustry || 'Manufacturing',
+      location: jobData.location || this.employerProfile.location,
+      city: jobData.city || this.employerProfile.city,
+      salaryMin: jobData.salaryMin || 25000,
+      salaryMax: jobData.salaryMax || 35000,
+      salaryPeriod: 'monthly',
+      experienceRequiredYears: jobData.experienceRequiredYears || 2,
+      jobType: jobData.jobType || 'Full-time',
+      shift: jobData.shift || 'Day Shift',
+      openings: jobData.openings || 2,
+      joiningDate: jobData.joiningDate || 'Immediate',
+      deadlineDate: '30 days',
+      postedAt: 'Just now',
+      requiredSkills: jobData.requiredSkills || ['Industrial Maintenance'],
+      description: jobData.description || 'Verified job opening created via Employer Hub.',
+      benefits: jobData.benefits || ['PF + ESI Coverage', 'Overtime Allowance'],
+      workAddress: jobData.workAddress || this.employerProfile.location,
+      status: 'active',
+      applicationsCount: 0,
+    };
+
+    this.jobs = [newJob, ...this.jobs];
+    this.saveGlobalData();
+    this.notify();
+    return { success: true, message: 'Opening posted successfully', job: newJob };
+  }
+
+  // Worker Application Submission
   applyForJob(jobId: string): { success: boolean; message: string; applicationId?: string } {
+    if (!this.currentUser) {
+      return { success: false, message: 'Please sign in or create a free worker account to apply.' };
+    }
+
+    if (this.currentUser.role !== 'worker') {
+      return { success: false, message: 'Only Worker accounts can apply for jobs. You are logged in as an Employer.' };
+    }
+
     const job = this.jobs.find((j) => j.id === jobId);
-    if (!job) return { success: false, message: 'Job not found' };
+    if (!job) return { success: false, message: 'Job opening not found.' };
 
     const existing = this.applications.find(
       (a) => a.jobId === jobId && a.workerId === this.workerProfile.id
     );
     if (existing) {
-      return { success: false, message: 'You have already applied for this job.' };
+      return { success: false, message: 'You have already applied for this opening.' };
     }
 
     const newApp: Application = {
@@ -455,357 +786,156 @@ class Store {
       workerTrustScore: this.workerProfile.trustScore.total,
       workerExperienceYears: this.workerProfile.yearsOfExperience,
       workerLocation: this.workerProfile.location,
-      matchScore: job.matchData?.matchPercentage || 92,
-      topSkills: this.workerProfile.skills.slice(0, 3).map((s) => s.name),
+      matchScore: 92,
+      topSkills: this.workerProfile.skills.map((s) => s.name),
+      appliedDate: 'Just now',
       currentStage: 'Applied',
-      appliedDate: new Date().toISOString().split('T')[0],
       timeline: [
         {
           stage: 'Applied',
           timestamp: 'Just now',
-          note: 'Application submitted with verified Trust Score (91/100)',
+          note: 'Application submitted with verified credentials attached.',
           completed: true,
         },
       ],
     };
 
-    this.applications.unshift(newApp);
-    this.saveToStorage();
+    this.applications = [newApp, ...this.applications];
+    job.applicationsCount = (job.applicationsCount || 0) + 1;
+    this.saveGlobalData();
+    this.saveCurrentUserData();
 
-    // Async backend apply
-    const numericJobId = parseInt(jobId.replace(/\D/g, ''), 10) || 1;
-    applicationApi.applyForJob(numericJobId).catch(() => console.log('Application saved locally.'));
-
-    return { success: true, message: 'Applied successfully!', applicationId: newApp.id };
-  }
-
-  async addProofOfWork(item: Omit<ProofOfWorkItem, 'id'>) {
-    const newPow: ProofOfWorkItem = {
-      id: `pow_${Date.now()}`,
-      ...item,
-    };
-    this.workerProfile.proofOfWork.unshift(newPow);
-    this.workerProfile.trustScore.completedJobs.score = Math.min(10, this.workerProfile.trustScore.completedJobs.score + 1);
-    this.workerProfile.trustScore.completedJobs.completedCount += 1;
-    this.recalcTrustScore();
-    this.saveToStorage();
-
-    try {
-      await workerApi.addProofOfWork({
-        title: item.title,
-        description: item.description,
-        category: item.category,
-        images: item.images,
-        skills_demonstrated: item.skillsDemonstrated,
-        client_or_employer: item.clientOrEmployer,
-        location: item.location,
-        completion_date: item.completionDate,
-      });
-    } catch (e) {
-      console.log('Proof of work saved locally.');
-    }
-  }
-
-  async addSkill(skill: Omit<SkillItem, 'id'>) {
-    const newSkill: SkillItem = {
-      id: `skill_${Date.now()}`,
-      ...skill,
-    };
-    this.workerProfile.skills.push(newSkill);
-    this.saveToStorage();
-
-    try {
-      await workerApi.addSkill({
-        skill_name: skill.name,
-        category: skill.category,
-        level: skill.level,
-        years_experience: skill.yearsExperience,
-      });
-    } catch (e) {
-      console.log('Skill saved locally.');
-    }
-  }
-
-  applyToJob(jobId: string) {
-    return this.applyForJob(jobId);
-  }
-
-  private recalcTrustScore() {
-    const ts = this.workerProfile.trustScore;
-    ts.total =
-      ts.identity.score +
-      ts.certifications.score +
-      ts.skills.score +
-      ts.experience.score +
-      ts.employerReviews.score +
-      ts.completedJobs.score;
-  }
-
-  toggleBookmarkJob(jobId: string) {
-    if (!this.workerProfile.bookmarkedJobIds) {
-      this.workerProfile.bookmarkedJobIds = [];
-    }
-    const idx = this.workerProfile.bookmarkedJobIds.indexOf(jobId);
-    const isAdding = idx < 0;
-    if (!isAdding) {
-      this.workerProfile.bookmarkedJobIds.splice(idx, 1);
-    } else {
-      this.workerProfile.bookmarkedJobIds.push(jobId);
-    }
-    this.saveToStorage();
-
-    const numericJobId = parseInt(jobId.replace(/\D/g, ''), 10) || 1;
-    if (isAdding) {
-      jobApi.saveJob(numericJobId).catch(() => {});
-    } else {
-      jobApi.unsaveJob(numericJobId).catch(() => {});
-    }
-  }
-
-  toggleBookmarkWorker(workerId: string) {
-    if (!this.employerProfile.bookmarkedWorkerIds) {
-      this.employerProfile.bookmarkedWorkerIds = [];
-    }
-    const idx = this.employerProfile.bookmarkedWorkerIds.indexOf(workerId);
-    const isAdding = idx < 0;
-    if (!isAdding) {
-      this.employerProfile.bookmarkedWorkerIds.splice(idx, 1);
-    } else {
-      this.employerProfile.bookmarkedWorkerIds.push(workerId);
-    }
-    this.saveToStorage();
-
-    const numericWorkerId = parseInt(workerId.replace(/\D/g, ''), 10) || 1;
-    if (isAdding) {
-      workerApi.saveCandidate(numericWorkerId).catch(() => {});
-    } else {
-      workerApi.unsaveCandidate(numericWorkerId).catch(() => {});
-    }
-  }
-
-  // Employer Actions
-  moveApplicationStage(applicationId: string, newStage: ApplicationStage, note?: string) {
-    const app = this.applications.find((a) => a.id === applicationId);
-    if (!app) return;
-
-    app.currentStage = newStage;
-    app.timeline.push({
-      stage: newStage,
-      timestamp: new Date().toISOString().split('T')[0],
-      note: note || `Candidate moved to ${newStage} stage.`,
-      completed: true,
-    });
-    this.saveToStorage();
-
-    const numericAppId = parseInt(applicationId.replace(/\D/g, ''), 10) || 1;
-    applicationApi.updateStage(numericAppId, newStage, note).catch(() => console.log('Stage synced locally.'));
-  }
-
-  scheduleInterview(applicationId: string, interview: InterviewDetails) {
-    const app = this.applications.find((a) => a.id === applicationId);
-    if (!app) return;
-
-    app.currentStage = 'Interview';
-    app.interview = interview;
-    app.timeline.push({
-      stage: 'Interview',
-      timestamp: interview.date,
-      note: `Interview scheduled (${interview.type}) at ${interview.time}.`,
-      completed: true,
-    });
-
+    // Add confirmation notification
     this.notifications.unshift({
       id: `notif_${Date.now()}`,
-      userId: app.workerId,
-      title: 'Interview Scheduled',
-      message: `Your interview for ${app.jobTitle} with ${app.companyName} is on ${interview.date} at ${interview.time}.`,
+      userId: this.currentUser.id,
+      title: 'Application Submitted',
+      message: `Your application for ${job.title} at ${job.companyName} was sent.`,
+      type: 'application_update',
       timestamp: 'Just now',
       isRead: false,
-      type: 'interview',
       actionUrl: '/worker/applications',
     });
+    this.saveCurrentUserData();
 
-    this.saveToStorage();
-
-    const numericAppId = parseInt(applicationId.replace(/\D/g, ''), 10) || 1;
-    applicationApi.scheduleInterview(numericAppId, {
-      date: interview.date,
-      time: interview.time,
-      interview_type: interview.type,
-      location_or_link: interview.locationOrLink,
-      instructions: interview.instructions,
-      interviewer_name: interview.interviewerName,
-    }).catch(() => console.log('Interview saved locally.'));
+    return { success: true, message: 'Application submitted successfully!', applicationId: newApp.id };
   }
 
-  async fetchPublicJobs(params: JobFilterParams = {}) {
-    try {
-      const res = await jobApi.getPublicJobs(params);
-      if (res?.results && res.results.length > 0) {
-        this.jobs = res.results.map((j: any) => ({
-          id: String(j.id),
-          employerId: String(j.employer?.id || 'emp_1'),
-          companyName: j.company_name || 'Industrial Plant',
-          companyLogoUrl: j.company_logo_url || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200',
-          isCompanyVerified: j.is_company_verified ?? true,
-          title: j.title,
-          tradeCategory: j.trade_category,
-          location: j.location,
-          city: j.city,
-          distanceKm: j.distance_km || 5.0,
-          salaryMin: j.salary_min,
-          salaryMax: j.salary_max,
-          salaryPeriod: j.salary_period || 'monthly',
-          experienceRequiredYears: j.experience_required_years || 3,
-          jobType: j.job_type || 'Full-time',
-          shift: j.shift || 'Day Shift',
-          openings: j.openings || 2,
-          joiningDate: j.joining_date || 'Within 15 Days',
-          deadlineDate: j.deadline_date || '2026-04-30',
-          postedAt: 'Active Now',
-          requiredSkills: j.required_skills || [],
-          description: j.description,
-          benefits: j.benefits || ['PF & ESI', 'Overtime Pay'],
-          workAddress: j.work_address || j.location,
-          status: j.status || 'active',
-          matchData: j.match_data || {
-            matchPercentage: 91,
-            skillCompatibility: { score: 44, max: 50, details: 'Matches trade requirements' },
-            experienceScore: { score: 18, max: 20, details: 'Verified tenure' },
-            locationScore: { score: 14, max: 15, details: 'Local candidate' },
-            certificationScore: { score: 5, max: 5, details: 'Verified certificates' },
-            availabilityScore: { score: 10, max: 10, details: 'Immediate' },
-            reasons: ['Strong trade profile', 'Valid government credentials'],
-          },
-        }));
-        this.saveToStorage();
-      }
-    } catch (e) {
-      console.log('Public jobs loaded from cache/fallback.');
+  // Kanban Pipeline Stage Transition
+  updateApplicationStage(appId: string, nextStage: ApplicationStage, notes?: string) {
+    const app = this.applications.find((a) => a.id === appId);
+    if (!app) return;
+
+    app.currentStage = nextStage;
+    app.timeline.push({
+      stage: nextStage,
+      timestamp: 'Just now',
+      note: notes || `Moved to ${nextStage}`,
+      completed: true,
+    });
+
+    this.saveCurrentUserData();
+    this.saveGlobalData();
+    this.notify();
+  }
+
+  // Interview Scheduling
+  scheduleInterview(appId: string, details: InterviewDetails) {
+    const app = this.applications.find((a) => a.id === appId);
+    if (!app) return;
+
+    app.interview = details;
+    app.currentStage = 'Interview';
+    app.timeline.push({
+      stage: 'Interview',
+      timestamp: 'Just now',
+      note: `${details.type} scheduled on ${details.date} at ${details.time}`,
+      completed: true,
+    });
+
+    this.saveCurrentUserData();
+    this.saveGlobalData();
+    this.notify();
+  }
+
+  // Document Verification (Admin)
+  verifyDocument(id: string, status: 'verified' | 'rejected', reason?: string) {
+    const doc = this.verifications.find((v) => v.id === id);
+    if (doc) {
+      doc.status = status;
+      doc.rejectionReason = reason;
+      doc.reviewedAt = 'Just now';
+      doc.reviewedBy = 'NSDC Regional Auditor';
+      this.saveGlobalData();
+      this.notify();
     }
   }
 
-  createJob(jobData: Partial<Job> & { title: string; tradeCategory: string; description: string; jobType: any; shift: any; openings: number; salaryMin: number; salaryMax: number }): Job {
-    const newJob: Job = {
-      salaryPeriod: 'monthly',
-      experienceRequiredYears: 3,
-      joiningDate: 'Within 15 Days',
-      deadlineDate: '2026-04-30',
-      requiredSkills: [],
-      benefits: [],
-      workAddress: 'Autonagar, Vijayawada',
-      status: 'active',
-      location: jobData.city || 'Vijayawada',
-      city: jobData.city || 'Vijayawada',
-      ...jobData,
-      id: `job_${Date.now()}`,
-      employerId: this.employerProfile.id,
-      companyName: this.employerProfile.companyName,
-      companyLogoUrl: this.employerProfile.logoUrl,
-      isCompanyVerified: this.employerProfile.isVerified,
-      postedAt: 'Just now',
-      applicationsCount: 0,
-      matchData: {
-        matchPercentage: 91,
-        skillCompatibility: { score: 44, max: 50, details: 'Matches trade requirements' },
-        experienceScore: { score: 18, max: 20, details: 'Verified tenure' },
-        locationScore: { score: 14, max: 15, details: 'Local candidate' },
-        certificationScore: { score: 5, max: 5, details: 'Verified certificates' },
-        availabilityScore: { score: 10, max: 10, details: 'Immediate' },
-        reasons: ['Strong trade profile', 'Valid government credentials'],
-      },
-    };
-
-    this.jobs.unshift(newJob);
-    this.saveToStorage();
-
-    // Async sync with backend if employer authenticated
-    jobApi.createJob({
-      title: jobData.title,
-      trade_category: jobData.tradeCategory,
-      location: jobData.location || `${jobData.city || 'Vijayawada'}, AP`,
-      city: jobData.city || 'Vijayawada',
-      salary_min: jobData.salaryMin,
-      salary_max: jobData.salaryMax,
-      salary_period: jobData.salaryPeriod || 'monthly',
-      experience_required_years: jobData.experienceRequiredYears || 3,
-      job_type: jobData.jobType || 'Full-time',
-      shift: jobData.shift || 'Day Shift',
-      openings: jobData.openings || 2,
-      joining_date: jobData.joiningDate || 'Within 15 Days',
-      deadline_date: jobData.deadlineDate || '2026-04-30',
-      required_skills: jobData.requiredSkills || [],
-      preferred_skills: jobData.preferredSkills || [],
-      required_certifications: jobData.requiredCertifications || [],
-      description: jobData.description,
-      benefits: jobData.benefits || [],
-      work_address: jobData.workAddress || 'Autonagar Industrial Area',
-      status: jobData.status || 'active',
-    }).catch(() => console.log('Job persisted locally'));
-
-    return newJob;
+  resolveReport(id: string, status: 'resolved' | 'dismissed') {
+    const report = this.reports.find((r) => r.id === id);
+    if (report) {
+      report.status = status;
+      this.saveGlobalData();
+      this.notify();
+    }
   }
 
-  postNewJob(jobData: any): Job {
+  markNotificationRead(id: string) {
+    const notif = this.notifications.find((n) => n.id === id);
+    if (notif) {
+      notif.isRead = true;
+      this.saveCurrentUserData();
+    }
+  }
+
+  postNewJob(jobData: Partial<Job>) {
     return this.createJob(jobData);
   }
 
-  // Admin Actions
-  verifyDocument(docId: string, statusOrApproved: 'verified' | 'rejected' | boolean, reason?: string) {
-    const doc = this.verifications.find((v) => v.id === docId);
-    const isApproved = typeof statusOrApproved === 'boolean' ? statusOrApproved : statusOrApproved === 'verified';
-    
-    if (doc) {
-      doc.status = isApproved ? 'verified' : 'rejected';
-      if (reason) doc.rejectionReason = reason;
-      doc.reviewedBy = 'Admin Moderator';
-      doc.reviewedAt = new Date().toISOString().split('T')[0];
-      this.saveToStorage();
+  moveApplicationStage(appId: string, currentStage: ApplicationStage, direction: 'next' | 'prev') {
+    const STAGES: ApplicationStage[] = ['Applied', 'Screening', 'Shortlisted', 'Interview', 'Selected', 'Hired'];
+    const idx = STAGES.indexOf(currentStage);
+    if (idx === -1) return;
+
+    let targetStage = currentStage;
+    if (direction === 'next' && idx < STAGES.length - 1) {
+      targetStage = STAGES[idx + 1];
+    } else if (direction === 'prev' && idx > 0) {
+      targetStage = STAGES[idx - 1];
     }
 
-    const numericId = parseInt(docId.replace(/\D/g, ''), 10) || 1;
-    if (isApproved) {
-      verificationApi.approveDocument(numericId).catch(() => console.log('Approved locally'));
+    if (targetStage !== currentStage) {
+      this.updateApplicationStage(appId, targetStage);
+    }
+  }
+
+  toggleBookmarkJob(jobId: string): boolean {
+    const exists = this.workerProfile.bookmarkedJobIds.includes(jobId);
+    if (exists) {
+      this.workerProfile.bookmarkedJobIds = this.workerProfile.bookmarkedJobIds.filter((id) => id !== jobId);
     } else {
-      verificationApi.rejectDocument(numericId, reason).catch(() => console.log('Rejected locally'));
+      this.workerProfile.bookmarkedJobIds.push(jobId);
     }
+    this.saveCurrentUserData();
+    return !exists;
   }
 
-  approveVerification(docId: string) {
-    this.verifyDocument(docId, true);
-  }
-
-  rejectVerification(docId: string, reason: string) {
-    this.verifyDocument(docId, false, reason);
-  }
-
-  resolveReport(reportId: string, status: 'resolved' | 'dismissed' | string = 'resolved', notes?: string) {
-    const rep = this.reports.find((r) => r.id === reportId);
-    if (rep) {
-      rep.status = (status === 'dismissed' ? 'dismissed' : 'resolved');
-      this.saveToStorage();
+  toggleBookmarkWorker(workerId: string): boolean {
+    const exists = this.employerProfile.bookmarkedWorkerIds.includes(workerId);
+    if (exists) {
+      this.employerProfile.bookmarkedWorkerIds = this.employerProfile.bookmarkedWorkerIds.filter((id) => id !== workerId);
+    } else {
+      this.employerProfile.bookmarkedWorkerIds.push(workerId);
     }
+    this.saveCurrentUserData();
+    return !exists;
+  }
 
-    const numericReportId = parseInt(reportId.replace(/\D/g, ''), 10) || 1;
-    const reportStatus = status === 'dismissed' ? 'DISMISSED' : 'RESOLVED';
-    import('./api/reportApi').then(({ reportApi }) => {
-      reportApi.updateReportStatus(numericReportId, {
-        status: reportStatus,
-        resolution_notes: notes || 'Admin verified and action taken.',
-      }).catch(() => console.log('Report resolution saved locally.'));
+  markAllNotificationsRead() {
+    this.notifications.forEach((n) => {
+      n.isRead = true;
     });
-  }
-
-  resetDemoData() {
-    this.workerProfile = defaultWorkerProfile;
-    this.candidates = mockCandidates;
-    this.employerProfile = mockEmployerProfile;
-    this.jobs = mockJobs;
-    this.applications = mockApplications;
-    this.verifications = mockVerifications;
-    this.reports = mockReports;
-    this.notifications = mockNotifications;
-    this.saveToStorage();
+    this.saveCurrentUserData();
   }
 }
 

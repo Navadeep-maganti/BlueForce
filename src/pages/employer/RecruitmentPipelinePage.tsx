@@ -9,12 +9,11 @@ import {
   Clock,
   ArrowRight,
   ArrowLeft,
-  ChevronRight,
   X,
   Award,
-  Filter,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 import { Application, ApplicationStage, InterviewDetails } from '../../types';
 
@@ -25,6 +24,7 @@ interface RecruitmentPipelinePageProps {
 const STAGES: ApplicationStage[] = ['Applied', 'Screening', 'Shortlisted', 'Interview', 'Selected', 'Hired'];
 
 export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = ({ onNavigate }) => {
+  const { t } = useTranslation(['employer', 'applications', 'common', 'navigation']);
   const store = useStore();
   const applications = store.applications;
   const jobs = store.jobs;
@@ -59,30 +59,29 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
       }
 
       if (targetStage === 'Hired') {
-        // Trigger celebratory confetti
         confetti({
-          particleCount: 120,
+          particleCount: 80,
           spread: 70,
           origin: { y: 0.6 },
         });
       }
 
-      store.moveApplicationStage(appId, targetStage, `Stage advanced to ${targetStage}`);
+      store.updateApplicationStage(appId, targetStage, `Moved to ${targetStage}`);
     }
   };
 
-  const handleSaveInterview = (e: React.FormEvent) => {
+  const handleScheduleInterview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!interviewApp) return;
 
     store.scheduleInterview(interviewApp.id, {
-      id: `int_${Date.now()}`,
+      id: `iv_${Date.now()}`,
       date: interviewDate,
       time: interviewTime,
       type: interviewType,
       locationOrLink: interviewLoc,
       instructions,
-      interviewerName: 'K. Satyanarayana (General Manager)',
+      interviewerName: 'Plant Supervisor',
       status: 'scheduled',
     });
 
@@ -92,26 +91,24 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-navy">Recruitment Pipeline</h1>
-            <span className="badge badge-primary text-[11px]">Kanban Board</span>
-          </div>
+          <h1 className="text-xl font-bold text-navy">
+            {t('employer:pipelineTitle', 'Candidate Recruitment Kanban')}
+          </h1>
           <p className="text-xs text-muted">
-            Manage candidates across hiring stages. Moving to "Hired" generates worker ID badge and notifies candidate.
+            Drag, evaluate and move certified workers across verified trade qualification stages
           </p>
         </div>
 
-        {/* Job Filter Dropdown */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-600">Filter by Opening:</span>
+        {/* Job Filter Selector */}
+        <div className="w-full sm:w-64">
           <select
             value={selectedJobFilter}
             onChange={(e) => setSelectedJobFilter(e.target.value)}
-            className="form-select text-xs py-1.5 w-56"
+            className="form-select text-xs"
           >
-            <option value="all">All Open Positions ({jobs.length})</option>
+            <option value="all">⚡ {t('jobs:allTrades', 'All Active Openings')} ({jobs.length})</option>
             {jobs.map((j) => (
               <option key={j.id} value={j.id}>
                 {j.title}
@@ -121,114 +118,79 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
         </div>
       </div>
 
-      {/* Kanban Grid */}
-      <div className="kanban-grid">
+      {/* Kanban Board Columns (6 Stages) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3.5 overflow-x-auto min-h-[550px] pb-4">
         {STAGES.map((stage) => {
           const stageApps = filteredApps.filter((a) => a.currentStage === stage);
 
           return (
-            <div key={stage} className="kanban-column">
-              {/* Column Header */}
-              <div className="kanban-column-header">
-                <span className="flex items-center gap-1.5">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      stage === 'Hired'
-                        ? 'bg-emerald-500'
-                        : stage === 'Interview'
-                        ? 'bg-amber-500'
-                        : 'bg-primary'
-                    }`}
-                  />
-                  {stage}
-                </span>
-                <span className="badge badge-neutral text-[10px] py-0">
-                  {stageApps.length}
-                </span>
-              </div>
+            <div
+              key={stage}
+              className="kc-card p-3 bg-slate-50/70 border border-slate-200 flex flex-col justify-between min-w-[200px]"
+            >
+              <div>
+                {/* Column Header */}
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-3">
+                  <span className="font-extrabold text-xs text-navy">
+                    {t(`applications:statusStages.${stage.toLowerCase()}`, stage)}
+                  </span>
+                  <span className="w-5 h-5 rounded-full bg-white text-slate-700 text-[10px] font-bold flex items-center justify-center border shadow-2xs">
+                    {stageApps.length}
+                  </span>
+                </div>
 
-              {/* Cards in column */}
-              <div className="space-y-2.5 flex-1">
-                {stageApps.map((app) => (
-                  <div key={app.id} className="kanban-card space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={app.workerAvatarUrl}
-                          alt={app.workerName}
-                          className="w-9 h-9 rounded-xl object-cover border"
-                        />
+                {/* Cards List in this Stage */}
+                <div className="space-y-2.5">
+                  {stageApps.map((app) => (
+                    <div
+                      key={app.id}
+                      className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs space-y-2"
+                    >
+                      <div className="flex items-start justify-between gap-1">
                         <div>
-                          <h4 className="font-extrabold text-xs text-navy leading-tight">
-                            {app.workerName}
-                          </h4>
-                          <span className="text-[10px] text-muted">{app.workerTrade}</span>
+                          <h4 className="font-bold text-xs text-navy">{app.workerName}</h4>
+                          <span className="text-[10px] text-muted block line-clamp-1">
+                            {app.jobTitle}
+                          </span>
                         </div>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="badge badge-verified text-[10px] py-0">
-                          {app.workerTrustScore}
+                        <span className="badge badge-verified text-[8px] py-0">
+                          {app.matchScore}%
                         </span>
                       </div>
-                    </div>
 
-                    <div className="p-2 bg-slate-50 rounded-lg text-[11px] space-y-1">
-                      <div className="flex justify-between text-slate-700">
-                        <span className="truncate pr-1 font-semibold">{app.jobTitle}</span>
-                        <span className="font-bold text-emerald-700">{app.matchScore}%</span>
-                      </div>
-                      <div className="text-[10px] text-muted">
-                        Applied: {app.appliedDate}
-                      </div>
-                    </div>
+                      {app.interview && (
+                        <div className="p-1.5 rounded-md bg-purple-50 text-purple-700 text-[9px] font-semibold flex items-center gap-1 border border-purple-100">
+                          <Calendar className="w-3 h-3" />
+                          <span>{app.interview.date}</span>
+                        </div>
+                      )}
 
-                    {/* Scheduled Interview badge if in Interview */}
-                    {app.interview && (
-                      <div className="p-2 rounded bg-amber-50 border border-amber-200 text-[10px] text-amber-900 font-medium">
-                        🗓️ {app.interview.date} at {app.interview.time}
-                      </div>
-                    )}
-
-                    {/* Stage shift arrows */}
-                    <div className="flex items-center justify-between pt-2 border-t text-xs">
-                      {stage !== 'Applied' ? (
+                      {/* Stage Move Controls */}
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-100">
                         <button
-                          onClick={() => handleMoveStage(app.id, stage, 'prev')}
+                          onClick={() => handleMoveStage(app.id, app.currentStage, 'prev')}
+                          disabled={stage === 'Applied'}
+                          className={`p-1 rounded text-slate-400 hover:text-slate-700 ${
+                            stage === 'Applied' ? 'invisible' : ''
+                          }`}
                           title="Move Back"
-                          className="text-slate-400 hover:text-navy p-1 rounded hover:bg-slate-100"
                         >
-                          <ArrowLeft className="w-3.5 h-3.5" />
+                          <ArrowLeft className="w-3 h-3" />
                         </button>
-                      ) : (
-                        <div />
-                      )}
 
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        {stage}
-                      </span>
-
-                      {stage !== 'Hired' ? (
                         <button
-                          onClick={() => handleMoveStage(app.id, stage, 'next')}
-                          className="btn btn-primary btn-sm text-[10px] py-1 px-2 flex items-center gap-1"
+                          onClick={() => handleMoveStage(app.id, app.currentStage, 'next')}
+                          disabled={stage === 'Hired'}
+                          className={`btn btn-secondary btn-sm py-0.5 px-2 text-[10px] font-bold ${
+                            stage === 'Hired' ? 'invisible' : ''
+                          }`}
                         >
-                          {stage === 'Selected' ? (
-                            'Hire ✓'
-                          ) : stage === 'Shortlisted' ? (
-                            'Schedule 🗓️'
-                          ) : (
-                            <>
-                              Next <ArrowRight className="w-3 h-3" />
-                            </>
-                          )}
+                          {stage === 'Selected' ? 'Hire ✓' : 'Advance →'}
                         </button>
-                      ) : (
-                        <span className="badge badge-verified text-[10px]">Hired ✓</span>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           );
@@ -237,25 +199,22 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
 
       {/* Schedule Interview Modal */}
       {interviewApp && (
-        <div className="modal-overlay" onClick={() => setInterviewApp(null)}>
-          <div className="modal-content p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between pb-3 border-b">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" />
-                <div>
-                  <h3 className="text-base font-bold text-navy">Schedule Trade Test & Interview</h3>
-                  <p className="text-xs text-muted">Candidate: {interviewApp.workerName} ({interviewApp.jobTitle})</p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 border shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-sm font-black text-navy">Schedule Trade Test / Interview</h3>
+                <p className="text-[11px] text-muted">Candidate: {interviewApp.workerName}</p>
               </div>
-              <button onClick={() => setInterviewApp(null)} className="btn-icon">
-                <X className="w-5 h-5" />
+              <button onClick={() => setInterviewApp(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveInterview} className="space-y-3 py-4">
+            <form onSubmit={handleScheduleInterview} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div className="form-group">
-                  <label className="form-label text-xs">Interview Date</label>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Date</label>
                   <input
                     type="date"
                     required
@@ -264,9 +223,8 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
                     className="form-input text-xs"
                   />
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label text-xs">Time Slot</label>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Time</label>
                   <input
                     type="text"
                     required
@@ -277,22 +235,21 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label text-xs">Interview Type</label>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Assessment Type</label>
                 <select
                   value={interviewType}
                   onChange={(e) => setInterviewType(e.target.value as any)}
                   className="form-select text-xs"
                 >
-                  <option value="In-person Trade Test">In-person Trade Test (Plant Workshop)</option>
-                  <option value="Video Call">Video Technical Screening</option>
-                  <option value="Phone Screening">Phone Screening</option>
-                  <option value="Plant Visit">Plant Walkthrough & Foreman Discussion</option>
+                  <option value="In-person Trade Test">In-person Trade Test / Workshop</option>
+                  <option value="Technical Video Interview">Technical Video Call</option>
+                  <option value="Site Practical Demonstration">Plant Practical Demonstration</option>
                 </select>
               </div>
 
-              <div className="form-group">
-                <label className="form-label text-xs">Plant Address or Meeting Link</label>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Plant Location / Link</label>
                 <input
                   type="text"
                   required
@@ -302,8 +259,8 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label text-xs">Instructions for Candidate</label>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Candidate Instructions</label>
                 <textarea
                   rows={3}
                   value={instructions}
@@ -312,16 +269,16 @@ export const RecruitmentPipelinePage: React.FC<RecruitmentPipelinePageProps> = (
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t">
+              <div className="flex justify-end gap-2 pt-2 border-t">
                 <button
                   type="button"
                   onClick={() => setInterviewApp(null)}
                   className="btn btn-secondary btn-sm text-xs"
                 >
-                  Cancel
+                  {t('common:actions.cancel', 'Cancel')}
                 </button>
                 <button type="submit" className="btn btn-primary btn-sm text-xs font-bold">
-                  Confirm & Notify Candidate
+                  {t('applications:actions.confirmInterview', 'Schedule & Notify')}
                 </button>
               </div>
             </form>

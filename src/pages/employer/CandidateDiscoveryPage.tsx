@@ -3,19 +3,17 @@ import {
   Search,
   Users,
   ShieldCheck,
-  Star,
   MapPin,
   Sparkles,
   CheckCircle2,
   Bookmark,
   Briefcase,
-  SlidersHorizontal,
   ChevronRight,
   Phone,
   Mail,
   Award,
-  ExternalLink,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 import { WorkerProfile } from '../../types';
 import { TrustScoreWidget } from '../../components/trust/TrustScoreWidget';
@@ -25,23 +23,30 @@ interface CandidateDiscoveryPageProps {
 }
 
 export const CandidateDiscoveryPage: React.FC<CandidateDiscoveryPageProps> = ({ onNavigate }) => {
+  const { t } = useTranslation(['employer', 'worker', 'common', 'verification', 'navigation']);
   const store = useStore();
   const candidates = store.candidates;
-  const employer = store.employerProfile;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrade, setSelectedTrade] = useState('all');
-  const [minTrustScore, setMinTrustScore] = useState<number>(80);
+  const [minTrustScore, setMinTrustScore] = useState<number>(0);
   const [selectedCandidate, setSelectedCandidate] = useState<WorkerProfile | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleShortlist = (cand: WorkerProfile) => {
-    // If an application exists, move to shortlisted, or create application
+    if (!store.currentUser) {
+      onNavigate('/auth?role=employer');
+      return;
+    }
+    if (store.currentUser.role !== 'employer') {
+      setToastMessage('Only registered Employers can shortlist candidates. You are logged in as a Worker.');
+      setTimeout(() => setToastMessage(null), 3500);
+      return;
+    }
+
     const existing = store.applications.find((a) => a.workerId === cand.id);
     if (existing) {
-      store.moveApplicationStage(existing.id, 'Shortlisted', 'Shortlisted directly from Candidate Discovery');
-    } else {
-      store.applyForJob(store.jobs[0].id);
+      store.updateApplicationStage(existing.id, 'Shortlisted', 'Shortlisted directly from Candidate Discovery');
     }
     setToastMessage(`${cand.fullName} has been shortlisted for your opening!`);
     setTimeout(() => setToastMessage(null), 3000);
@@ -76,229 +81,163 @@ export const CandidateDiscoveryPage: React.FC<CandidateDiscoveryPageProps> = ({ 
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-navy">Candidate Discovery</h1>
-            <span className="badge badge-verified text-[11px]">
-              ✓ Pre-Verified Trade Roster
-            </span>
-          </div>
+          <h1 className="text-xl font-bold text-navy">
+            {t('employer:candidateSearch', 'Discover Verified Blue-Collar Talent')}
+          </h1>
           <p className="text-xs text-muted">
-            Discover verified industrial electricians, CNC operators, welders, and solar specialists with 85+ Trust Scores.
+            {t('employer:topCandidatesDesc', 'Browse 12,000+ pre-audited technicians with DigiLocker ID, trade diplomas, and site work proofs')}
           </p>
         </div>
-
-        <button
-          onClick={() => onNavigate('/employer/pipeline')}
-          className="btn btn-secondary btn-sm text-xs flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          View Kanban Pipeline →
-        </button>
       </div>
 
-      {/* Top Search & Filter Strip */}
-      <div className="kc-card p-5 bg-white border">
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-          <div className="relative sm:col-span-6">
+      {/* Top Filter Bar */}
+      <div className="kc-card p-4 bg-white border">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div className="sm:col-span-6 relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, trade (Electrician, CNC, Welder), or skill..."
-              className="form-input text-xs pl-9 pr-3 py-2.5"
+              placeholder="Search by trade (Electrician, Welder, CNC), skills, or location..."
+              className="form-input text-xs pl-8"
             />
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
           </div>
 
           <div className="sm:col-span-3">
             <select
               value={selectedTrade}
               onChange={(e) => setSelectedTrade(e.target.value)}
-              className="form-select text-xs py-2.5"
+              className="form-select text-xs"
             >
-              <option value="all">All Trade Disciplines</option>
-              <option value="Electrician">Electrician</option>
-              <option value="CNC">CNC Machinist</option>
-              <option value="Solar">Solar Tech</option>
-              <option value="Welder">Welder</option>
+              <option value="all">{t('jobs:allTrades', 'All Trade Categories')}</option>
+              <option value="Electrical">⚡ Electrical & Wiring</option>
+              <option value="Solar">☀️ Solar Power</option>
+              <option value="Machining">⚙️ CNC & Tooling</option>
+              <option value="Welding">🔥 TIG/MIG Welding</option>
             </select>
           </div>
 
           <div className="sm:col-span-3 flex items-center gap-2">
-            <span className="text-[11px] font-bold text-muted whitespace-nowrap">Min Trust:</span>
+            <span className="text-[11px] font-bold text-slate-600 whitespace-nowrap">
+              {t('common:badges.trustScore', 'Min Trust')}: {minTrustScore}
+            </span>
             <input
               type="range"
-              min="70"
-              max="95"
+              min="0"
+              max="100"
               step="5"
               value={minTrustScore}
               onChange={(e) => setMinTrustScore(Number(e.target.value))}
-              className="w-full accent-primary"
+              className="w-full accent-primary h-1.5"
             />
-            <span className="text-xs font-bold text-emerald-700 min-w-[28px]">{minTrustScore}</span>
           </div>
         </div>
       </div>
 
-      {/* Candidate Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredCandidates.map((cand) => {
-          const isBookmarked = employer.bookmarkedWorkerIds?.includes(cand.id);
-
-          return (
-            <div
-              key={cand.id}
-              className="kc-card p-5 bg-white border kc-card-hover flex flex-col justify-between space-y-4"
-            >
-              <div>
-                {/* Top Row */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3.5">
-                    <img
-                      src={cand.avatarUrl}
-                      alt={cand.fullName}
-                      className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-200"
-                    />
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="font-extrabold text-sm sm:text-base text-navy">
-                          {cand.fullName}
-                        </h3>
-                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      </div>
-                      <p className="text-xs font-bold text-primary">{cand.primaryTrade}</p>
-                      <p className="text-[11px] text-muted flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-slate-400" /> {cand.location} • {cand.yearsOfExperience} Yrs Exp
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Trust Score Box */}
-                  <div className="text-right">
-                    <div className="text-2xl font-black text-emerald-700 leading-none">
-                      {cand.trustScore.total}
-                    </div>
-                    <span className="text-[9px] uppercase font-bold text-muted block">
-                      Trust Score
-                    </span>
+      {/* Candidates Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredCandidates.map((cand) => (
+          <div
+            key={cand.id}
+            className="kc-card p-5 bg-white border flex flex-col justify-between space-y-4 kc-card-hover"
+          >
+            <div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={cand.avatarUrl}
+                    alt={cand.fullName}
+                    className="w-12 h-12 rounded-xl object-cover border border-slate-200 flex-shrink-0 shadow-2xs"
+                    style={{ width: '48px', height: '48px', minWidth: '48px', maxWidth: '48px', objectFit: 'cover' }}
+                  />
+                  <div>
+                    <h3 className="font-bold text-xs sm:text-sm text-navy flex items-center gap-1">
+                      {cand.fullName}
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    </h3>
+                    <p className="text-xs font-semibold text-primary">{cand.primaryTrade}</p>
+                    <p className="text-[11px] text-muted flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3 text-slate-400" /> {cand.location} •{' '}
+                      {t('worker:experienceYears', { years: cand.yearsOfExperience, defaultValue: `${cand.yearsOfExperience}y exp` })}
+                    </p>
                   </div>
                 </div>
 
-                {/* Tagline */}
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
-                  {cand.tagline}
-                </p>
-
-                {/* Verified Skills Strip */}
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {cand.skills.map((s, i) => (
-                    <span key={i} className="badge badge-neutral text-[10px]">
-                      ✓ {s.name}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Proof of Work Thumbnail preview if available */}
-                {cand.proofOfWork && cand.proofOfWork.length > 0 && (
-                  <div className="mt-3 p-2.5 bg-slate-50 rounded-xl border flex items-center gap-2.5">
-                    <img
-                      src={cand.proofOfWork[0].images[0]}
-                      alt="Proof"
-                      className="w-10 h-8 rounded object-cover border"
-                    />
-                    <div className="text-[11px] text-slate-700 flex-1 truncate">
-                      <strong>Work Proof:</strong> {cand.proofOfWork[0].title}
-                    </div>
-                    <span className="badge badge-verified text-[9px]">Verified</span>
+                <div className="text-right">
+                  <div className="text-base font-black text-emerald-700 leading-none">
+                    {cand.trustScore.total}
                   </div>
-                )}
+                  <span className="text-[8px] uppercase font-bold text-emerald-800 tracking-wider">
+                    {t('common:badges.trustScore', 'Trust')}
+                  </span>
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="pt-3 border-t flex items-center justify-between gap-2">
-                <button
-                  onClick={() => store.toggleBookmarkWorker(cand.id)}
-                  className={`p-2 rounded-lg border text-xs transition-colors ${
-                    isBookmarked
-                      ? 'bg-amber-50 text-amber-600 border-amber-300'
-                      : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  <Bookmark className="w-4 h-4" />
-                </button>
-
-                <div className="flex items-center gap-2 flex-1 justify-end">
-                  <button
-                    onClick={() => setSelectedCandidate(cand)}
-                    className="btn btn-secondary btn-sm text-xs flex-1 sm:flex-initial"
-                  >
-                    View Verified Profile
-                  </button>
-                  <button
-                    onClick={() => handleShortlist(cand)}
-                    className="btn btn-primary btn-sm text-xs font-bold flex-1 sm:flex-initial"
-                  >
-                    Shortlist Candidate
-                  </button>
-                </div>
+              {/* Skills Tags */}
+              <div className="flex flex-wrap gap-1 mt-3">
+                {cand.skills.slice(0, 3).map((s, idx) => (
+                  <span key={idx} className="badge badge-neutral text-[9px]">
+                    {s.name}
+                  </span>
+                ))}
               </div>
             </div>
-          );
-        })}
+
+            <div className="pt-3 border-t flex items-center gap-2">
+              <button
+                onClick={() => setSelectedCandidate(cand)}
+                className="btn btn-secondary btn-sm flex-1 text-xs"
+              >
+                {t('common:actions.viewDetails', 'View Trust ID')}
+              </button>
+              <button
+                onClick={() => handleShortlist(cand)}
+                className="btn btn-primary btn-sm flex-1 text-xs"
+              >
+                {t('employer:stages.shortlisted', 'Shortlist')}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Candidate Profile Detail Modal */}
+      {/* Candidate Profile Detail Drawer / Modal */}
       {selectedCandidate && (
-        <div className="modal-overlay" onClick={() => setSelectedCandidate(null)}>
-          <div className="modal-content p-6 max-w-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between pb-4 border-b">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 border shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b pb-3">
               <div className="flex items-center gap-3">
                 <img
                   src={selectedCandidate.avatarUrl}
                   alt={selectedCandidate.fullName}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-primary"
+                  className="w-14 h-14 rounded-xl object-cover border"
                 />
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-lg font-black text-navy">{selectedCandidate.fullName}</h3>
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  </div>
+                  <h2 className="text-base font-black text-navy">{selectedCandidate.fullName}</h2>
                   <p className="text-xs font-bold text-primary">{selectedCandidate.primaryTrade}</p>
-                  <p className="text-xs text-muted">{selectedCandidate.location} • {selectedCandidate.yearsOfExperience} Years Exp</p>
+                  <p className="text-[11px] text-muted">{selectedCandidate.location}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedCandidate(null)} className="btn-icon">
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+              >
                 ✕
               </button>
             </div>
 
-            <div className="py-4 space-y-4">
-              <TrustScoreWidget scoreData={selectedCandidate.trustScore} />
+            {/* Trust Breakdown inside Modal */}
+            <TrustScoreWidget scoreData={selectedCandidate.trustScore} />
 
-              <div className="p-3 bg-slate-50 rounded-xl text-xs space-y-1">
-                <h4 className="font-bold text-navy">About Technician</h4>
-                <p className="text-slate-600 leading-relaxed">{selectedCandidate.bio}</p>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                  Verified Skills & Level
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  {selectedCandidate.skills.map((s, i) => (
-                    <div key={i} className="p-2 rounded bg-white border flex items-center justify-between">
-                      <span className="font-semibold text-slate-700">{s.name}</span>
-                      <span className="text-amber-500 font-bold">{s.level}★</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t flex justify-end gap-2">
-              <button onClick={() => setSelectedCandidate(null)} className="btn btn-secondary btn-sm text-xs">
-                Close
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="btn btn-secondary btn-sm text-xs"
+              >
+                {t('common:actions.close', 'Close')}
               </button>
               <button
                 onClick={() => {
@@ -307,7 +246,7 @@ export const CandidateDiscoveryPage: React.FC<CandidateDiscoveryPageProps> = ({ 
                 }}
                 className="btn btn-primary btn-sm text-xs font-bold"
               >
-                Shortlist for Interview
+                {t('employer:stages.shortlisted', 'Shortlist for Opening')}
               </button>
             </div>
           </div>

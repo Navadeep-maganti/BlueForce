@@ -1,0 +1,25 @@
+{
+  "title": "Workforce & Hiring Analytics",
+  "subtitle": "Real-time metrics on candidate matching, time-to-hire, and regional skill demand.",
+  "metrics": {
+    "totalOpenings": "Total Openings Posted",
+    "totalApplications": "Total Applications Received",
+    "avgTimeToHire": "Average Time to Hire",
+    "hireConversion": "Hiring Conversion Rate",
+    "avgTrustScore": "Average Candidate Trust Score",
+    "activeWorkers": "Active Verified Workers"
+  },
+  "charts": {
+    "applicationFunnel": "Hiring Funnel Stages",
+    "demandByTrade": "Trade Skill Demand vs Supply",
+    "regionalDistribution": "Geographic Candidate Distribution",
+    "monthlyHires": "Monthly Placements"
+  },
+  "reports": {
+    "exportReport": "Export Analytics Report (PDF/CSV)",
+    "dateRange": "Date Range",
+    "last30Days": "Last 30 Days",
+    "lastQuarter": "Last Quarter",
+    "thisYear": "This Year"
+  }
+}

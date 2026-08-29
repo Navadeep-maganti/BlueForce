@@ -1,0 +1,87 @@
+{
+  "appName": "KaushalConnect",
+  "tagline": "Skills that get seen. Work that gets trusted.",
+  "slogan": "Empowering India's skilled workforce through verified credentials and direct opportunities.",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "update": "Update",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "clearAll": "Clear all",
+    "applyFilters": "Apply filters",
+    "reset": "Reset",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "viewDetails": "View details",
+    "viewAll": "View all",
+    "learnMore": "Learn more",
+    "download": "Download",
+    "upload": "Upload",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "share": "Share",
+    "refresh": "Refresh",
+    "loading": "Loading...",
+    "processing": "Processing...",
+    "submitting": "Submitting...",
+    "saving": "Saving..."
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "inReview": "In review",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "completed": "Completed",
+    "expired": "Expired",
+    "draft": "Draft",
+    "published": "Published",
+    "closed": "Closed"
+  },
+  "badges": {
+    "verifiedWorker": "Verified Technician",
+    "trustScore": "Trust Score",
+    "highMatch": "High Match",
+    "urgentHiring": "Urgent Requirement",
+    "topEmployer": "Verified Employer",
+    "governmentCertified": "NSDC Certified",
+    "proofVerified": "Work Proof Verified"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minsAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago",
+    "monthsAgo": "{{count}}mo ago",
+    "perMonth": "per month",
+    "perDay": "per day",
+    "perHour": "per hour"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "Showing {{from}} to {{to}} of {{total}} results",
+    "page": "Page {{current}} of {{total}}"
+  },
+  "emptyState": {
+    "noResults": "No results found",
+    "noResultsDesc": "Try adjusting your search filters or keywords to discover more opportunities.",
+    "clearFilters": "Clear filters"
+  },
+  "confirm": {
+    "areYouSure": "Are you sure?",
+    "actionCannotBeUndone": "This action cannot be undone."
+  },
+  "integrityDisclaimer": "User profiles and employer job descriptions reflect original submissions. Verification badges reflect platform credential audits."
+}

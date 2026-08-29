@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Mail, Lock, User, Briefcase, Phone, ArrowRight, Sparkles, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { useI18n } from '../../i18n/context';
+import { ShieldCheck, Mail, Lock, User, Briefcase, Phone, ArrowRight, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 import { UserRole } from '../../types';
 
@@ -10,7 +10,7 @@ interface AuthPageProps {
 }
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'worker' }) => {
-  const { t } = useI18n();
+  const { t } = useTranslation(['auth', 'common', 'navigation']);
   const store = useStore();
   const [isRegister, setIsRegister] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole);
@@ -25,7 +25,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
   const handle1ClickLogin = async (role: UserRole) => {
     setIsLoading(true);
     setErrorMessage(null);
-    const demoEmail = role === 'worker' ? 'worker@demo.com' : (role === 'employer' ? 'employer@demo.com' : 'admin@demo.com');
+    const demoEmail =
+      role === 'worker'
+        ? 'worker@demo.com'
+        : role === 'employer'
+        ? 'employer@demo.com'
+        : 'admin@demo.com';
     const res = await store.login(demoEmail, 'password123');
     setIsLoading(false);
 
@@ -88,10 +93,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
       <div className="p-4 rounded-xl bg-gradient-to-r from-blue-900 to-navy-950 text-white shadow-lg mb-6 border border-blue-800">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-4 h-4 text-cyan-400" />
-          <h3 className="font-extrabold text-xs text-white">⚡ Instant 1-Click Demo Logins</h3>
+          <h3 className="font-extrabold text-xs text-white">⚡ {t('auth:demoQuickLogin', 'Instant 1-Click Demo Logins')}</h3>
         </div>
         <p className="text-[11px] text-blue-200 mb-3">
-          Select any verified persona to instantly sign in with live JWT tokens:
+          {t('auth:signInSubtitle', 'Select any verified persona to instantly sign in with live JWT tokens:')}
         </p>
 
         <div className="space-y-1.5">
@@ -149,12 +154,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
             <ShieldCheck className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-bold text-navy">
-            {isRegister ? 'Create your Account' : 'Sign in to KaushalConnect'}
+            {isRegister
+              ? t('auth:registerTitle', 'Create your Account')
+              : t('auth:signInTitle', 'Sign in to KaushalConnect')}
           </h2>
           <p className="text-[11px] text-muted mt-0.5">
             {isRegister
-              ? 'Join India’s trusted blue-collar workforce network'
-              : 'Access your verified profile, jobs, or candidates'}
+              ? t('auth:registerSubtitle', "Join India's trusted blue-collar workforce network")
+              : t('auth:signInSubtitle', 'Access your verified profile, jobs, or candidates')}
           </p>
         </div>
 
@@ -175,7 +182,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
               selectedRole === 'worker' ? 'bg-white text-primary shadow-xs' : 'text-slate-600'
             }`}
           >
-            👷 Technician / Worker
+            👷 {t('auth:workerRole', 'Technician / Worker')}
           </button>
           <button
             type="button"
@@ -184,7 +191,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
               selectedRole === 'employer' ? 'bg-white text-primary shadow-xs' : 'text-slate-600'
             }`}
           >
-            🏢 Employer / Plant
+            🏢 {t('auth:employerRole', 'Employer / Plant')}
           </button>
         </div>
 
@@ -193,7 +200,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
             <>
               <div className="form-group">
                 <label className="form-label text-xs">
-                  {selectedRole === 'worker' ? 'Full Name' : 'Company / Plant Name'}
+                  {selectedRole === 'worker'
+                    ? t('auth:fullName', 'Full Name')
+                    : t('auth:companyName', 'Company / Plant Name')}
                 </label>
                 <div className="relative">
                   <input
@@ -201,7 +210,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder={selectedRole === 'worker' ? 'e.g. Ramesh Kumar' : 'e.g. ABC Industries Ltd.'}
+                    placeholder={
+                      selectedRole === 'worker'
+                        ? t('auth:fullNamePlaceholder', 'e.g. Ramesh Kumar')
+                        : t('auth:companyNamePlaceholder', 'e.g. ABC Industries Ltd.')
+                    }
                     className="form-input text-xs pl-8"
                   />
                   <User className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
@@ -210,7 +223,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
 
               <div className="form-group">
                 <label className="form-label text-xs">
-                  {selectedRole === 'worker' ? 'Primary Trade' : 'Industry Sector'}
+                  {selectedRole === 'worker'
+                    ? t('auth:tradeCategory', 'Primary Trade')
+                    : t('employer:jobCreation.tradeCategory', 'Industry Sector')}
                 </label>
                 <div className="relative">
                   <input
@@ -218,7 +233,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
                     required
                     value={trade}
                     onChange={(e) => setTrade(e.target.value)}
-                    placeholder={selectedRole === 'worker' ? 'e.g. Industrial Electrician' : 'e.g. Manufacturing'}
+                    placeholder={
+                      selectedRole === 'worker'
+                        ? 'e.g. Industrial Electrician'
+                        : 'e.g. Manufacturing'
+                    }
                     className="form-input text-xs pl-8"
                   />
                   <Briefcase className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
@@ -244,13 +263,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
 
           {isRegister && (
             <div className="form-group">
-              <label className="form-label text-xs">Mobile Number</label>
+              <label className="form-label text-xs">{t('auth:phoneNumber', 'Mobile Number')}</label>
               <div className="relative">
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98480 XXXXX"
+                  placeholder={t('auth:phoneNumberPlaceholder', '10-digit mobile number')}
                   className="form-input text-xs pl-8"
                 />
                 <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
@@ -280,13 +299,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
           >
             {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {isRegister
-              ? `Register as ${selectedRole === 'worker' ? 'Technician' : 'Employer'}`
-              : 'Sign In'}
+              ? selectedRole === 'worker'
+                ? t('auth:registerBtn', 'Create Worker Account')
+                : t('auth:registerBtn', 'Create Employer Account')
+              : t('auth:signInBtn', 'Sign In')}
           </button>
         </form>
 
         <div className="mt-4 text-center pt-3 border-t text-xs text-slate-600">
-          {isRegister ? 'Already registered?' : "Don't have an account yet?"}{' '}
+          {isRegister
+            ? t('auth:alreadyHaveAccount', 'Already have an account?')
+            : t('auth:dontHaveAccount', "Don't have an account yet?")}{' '}
           <button
             type="button"
             onClick={() => {
@@ -295,7 +318,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, defaultRole = 'w
             }}
             className="text-primary font-bold hover:underline ml-1"
           >
-            {isRegister ? 'Sign In here' : 'Create Free Account'}
+            {isRegister ? t('auth:signInBtn', 'Sign In here') : t('auth:registerBtn', 'Create Free Account')}
           </button>
         </div>
       </div>

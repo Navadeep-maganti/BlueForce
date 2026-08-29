@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
   Building,
   MapPin,
   Clock,
@@ -11,6 +10,7 @@ import {
   Layers,
   Wrench,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../../hooks/useStore';
 
 interface JobCreationPageProps {
@@ -18,6 +18,7 @@ interface JobCreationPageProps {
 }
 
 export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) => {
+  const { t } = useTranslation(['employer', 'jobs', 'common', 'navigation']);
   const store = useStore();
   const [currentStep, setCurrentStep] = useState<number>(1);
 
@@ -45,13 +46,24 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleNext = () => {
-    const error = currentStep === 1
-      ? (!title.trim() || !description.trim() ? 'Add a job title and a clear job description to continue.' : openings < 1 ? 'Enter at least one opening.' : null)
-      : currentStep === 2
-        ? (!skillsStr.trim() ? 'Add at least one required skill to continue.' : null)
+    const error =
+      currentStep === 1
+        ? !title.trim() || !description.trim()
+          ? 'Add a job title and a clear job description to continue.'
+          : openings < 1
+          ? 'Enter at least one opening.'
+          : null
+        : currentStep === 2
+        ? !skillsStr.trim()
+          ? 'Add at least one required skill to continue.'
+          : null
         : currentStep === 3
-          ? (!city.trim() || !workAddress.trim() ? 'Add the city and full work address to continue.' : salaryMin <= 0 || salaryMax < salaryMin ? 'Enter a valid monthly salary range.' : null)
-          : null;
+        ? !city.trim() || !workAddress.trim()
+          ? 'Add the city and full work address to continue.'
+          : salaryMin <= 0 || salaryMax < salaryMin
+          ? 'Enter a valid monthly salary range.'
+          : null
+        : null;
     if (error) {
       setValidationError(error);
       return;
@@ -93,14 +105,16 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
         onClick={() => onNavigate('/employer/dashboard')}
         className="text-xs font-bold text-slate-600 hover:text-navy flex items-center gap-1.5"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        <ArrowLeft className="w-4 h-4" /> {t('common:actions.back', 'Back to Dashboard')}
       </button>
 
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-black text-navy">Post a New Trade Opening</h1>
+        <h1 className="text-xl sm:text-2xl font-black text-navy">
+          {t('employer:jobCreation.title', 'Post a New Trade Opening')}
+        </h1>
         <p className="text-xs text-muted">
-          Describe the role clearly so verified candidates can understand requirements before they apply.
+          {t('employer:jobCreation.subtitle', 'Publish a verified industrial opening to 12,000+ certified technicians.')}
         </p>
       </div>
 
@@ -131,7 +145,11 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
 
       {/* Step Contents */}
       <div className="kc-card p-6 bg-white border">
-        {validationError && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" role="alert">{validationError}</div>}
+        {validationError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700" role="alert">
+            {validationError}
+          </div>
+        )}
 
         {/* STEP 1: Basic Details */}
         {currentStep === 1 && (
@@ -139,20 +157,24 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
             <h2 className="text-base font-bold text-navy">Step 1: Role Overview</h2>
 
             <div className="form-group">
-              <label className="form-label text-xs">Job Title</label>
+              <label className="form-label text-xs">
+                {t('employer:jobCreation.jobTitle', 'Job Title')}
+              </label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Industrial Electrician & Substation Tech"
+                placeholder={t('employer:jobCreation.jobTitlePlaceholder', 'e.g. Industrial Electrician & Substation Tech')}
                 className="form-input text-xs"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label text-xs">Trade Category</label>
+                <label className="form-label text-xs">
+                  {t('employer:jobCreation.tradeCategory', 'Trade Category')}
+                </label>
                 <select
                   value={tradeCategory}
                   onChange={(e) => setTradeCategory(e.target.value)}
@@ -167,7 +189,9 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
               </div>
 
               <div className="form-group">
-                <label className="form-label text-xs">Open Vacancies</label>
+                <label className="form-label text-xs">
+                  {t('employer:jobCreation.vacancies', 'Open Vacancies')}
+                </label>
                 <input
                   type="number"
                   min="1"
@@ -181,7 +205,9 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label text-xs">Job Type</label>
+                <label className="form-label text-xs">
+                  {t('jobs:filterByJobType', 'Job Type')}
+                </label>
                 <select
                   value={jobType}
                   onChange={(e) => setJobType(e.target.value as any)}
@@ -200,61 +226,67 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
                   onChange={(e) => setShift(e.target.value as any)}
                   className="form-select text-xs"
                 >
-                  <option value="Day Shift">Day Shift (08:00 AM – 05:00 PM)</option>
-                  <option value="Night Shift">Night Shift (08:00 PM – 05:00 AM)</option>
-                  <option value="Rotational">Rotational Shift (3 Shifts)</option>
+                  <option value="Day Shift">Day Shift</option>
+                  <option value="Night Shift">Night Shift</option>
+                  <option value="Rotational">Rotational</option>
                 </select>
               </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label text-xs">Job Description & Responsibilities</label>
+              <label className="form-label text-xs">
+                {t('employer:jobCreation.jobDescription', 'Job Description')}
+              </label>
               <textarea
+                required
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                placeholder={t('employer:jobCreation.jobDescriptionPlaceholder', 'Describe shift timing, machine types, overtime policy, food/accommodation...')}
                 className="form-textarea text-xs"
               />
             </div>
           </div>
         )}
 
-        {/* STEP 2: Skills & Requirements */}
+        {/* STEP 2: Skills & Certs */}
         {currentStep === 2 && (
           <div className="space-y-4 animate-fadeIn">
-            <h2 className="text-base font-bold text-navy">Step 2: Skills & Mandatory Certifications</h2>
+            <h2 className="text-base font-bold text-navy">Step 2: Required Skills & Credentials</h2>
 
             <div className="form-group">
-              <label className="form-label text-xs">Required Trade Skills (comma separated)</label>
+              <label className="form-label text-xs">Required Technical Skills (comma separated)</label>
               <input
                 type="text"
+                required
                 value={skillsStr}
                 onChange={(e) => setSkillsStr(e.target.value)}
-                placeholder="e.g. Industrial Three-Phase Wiring, LT Panels, Motor Rewinding"
+                placeholder="e.g. PLC Ladder Logic, 415V HT Panels, Transformer Testing"
                 className="form-input text-xs"
               />
-              <p className="text-[11px] text-muted">
-                Use clear trade terms to help candidates assess whether the role is right for them.
-              </p>
             </div>
 
             <div className="form-group">
-              <label className="form-label text-xs">Mandatory Trade Licenses / Certifications</label>
+              <label className="form-label text-xs">
+                {t('employer:jobCreation.certificationsRequired', 'Required Certifications')} (comma separated)
+              </label>
               <input
                 type="text"
                 value={certsStr}
                 onChange={(e) => setCertsStr(e.target.value)}
-                placeholder="e.g. ITI NCVT Electrician, A-Grade Wireman License"
+                placeholder="e.g. NCVT ITI Electrician, CEIG 'A' License"
                 className="form-input text-xs"
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label text-xs">Minimum Experience Required (Years)</label>
+              <label className="form-label text-xs">
+                {t('employer:jobCreation.minExperience', 'Minimum Experience (Years)')}
+              </label>
               <input
                 type="number"
                 min="0"
-                max="20"
+                max="30"
                 value={expYears}
                 onChange={(e) => setExpYears(Number(e.target.value))}
                 className="form-input text-xs"
@@ -263,30 +295,38 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
           </div>
         )}
 
-        {/* STEP 3: Location & Salary */}
+        {/* STEP 3: Location & Pay */}
         {currentStep === 3 && (
           <div className="space-y-4 animate-fadeIn">
             <h2 className="text-base font-bold text-navy">Step 3: Location & Compensation</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label text-xs">Minimum Monthly Salary (₹)</label>
+                <label className="form-label text-xs">
+                  {t('employer:jobCreation.salaryMin', 'Minimum Monthly Salary (₹)')}
+                </label>
                 <input
                   type="number"
+                  min="0"
                   step="1000"
                   value={salaryMin}
                   onChange={(e) => setSalaryMin(Number(e.target.value))}
+                  placeholder="22000"
                   className="form-input text-xs"
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label text-xs">Maximum Monthly Salary (₹)</label>
+                <label className="form-label text-xs">
+                  {t('employer:jobCreation.salaryMax', 'Maximum Monthly Salary (₹)')}
+                </label>
                 <input
                   type="number"
+                  min="0"
                   step="1000"
                   value={salaryMax}
                   onChange={(e) => setSalaryMax(Number(e.target.value))}
+                  placeholder="30000"
                   className="form-input text-xs"
                 />
               </div>
@@ -294,42 +334,39 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label text-xs">City</label>
+                <label className="form-label text-xs">
+                  {t('employer:jobCreation.location', 'City / District')}
+                </label>
                 <input
                   type="text"
+                  required
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
+                  placeholder="Vijayawada, AP"
                   className="form-input text-xs"
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label text-xs">Expected Joining Timeline</label>
+                <label className="form-label text-xs">Plant / Factory Address</label>
                 <input
                   type="text"
-                  value={joiningDate}
-                  onChange={(e) => setJoiningDate(e.target.value)}
+                  required
+                  value={workAddress}
+                  onChange={(e) => setWorkAddress(e.target.value)}
+                  placeholder="Plot 42, Auto Nagar Industrial Estate"
                   className="form-input text-xs"
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label text-xs">Full Plant Work Address</label>
-              <input
-                type="text"
-                value={workAddress}
-                onChange={(e) => setWorkAddress(e.target.value)}
-                className="form-input text-xs"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label text-xs">Benefits Provided (comma separated)</label>
+              <label className="form-label text-xs">Benefits & Allowances (comma separated)</label>
               <input
                 type="text"
                 value={benefitsStr}
                 onChange={(e) => setBenefitsStr(e.target.value)}
+                placeholder="e.g. Free Plant Canteen, PF + ESI, Overtime 2x, Transport"
                 className="form-input text-xs"
               />
             </div>
@@ -338,61 +375,42 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
 
         {/* STEP 4: Review & Publish */}
         {currentStep === 4 && (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <div>
-                <h3 className="text-xs font-bold text-emerald-950">Ready to review</h3>
-                <p className="text-[11px] text-emerald-800">
-                  Check the job details below. You can still go back and make changes before publishing.
-                </p>
-              </div>
-            </div>
+          <div className="space-y-4 animate-fadeIn">
+            <h2 className="text-base font-bold text-navy">Step 4: Review Your Job Opening</h2>
 
-            {/* Preview Card */}
-            <div className="p-5 rounded-2xl border bg-slate-50 space-y-3">
-              <div className="flex items-start justify-between">
+            <div className="p-4 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <div className="flex justify-between border-b pb-2">
+                <span className="font-bold text-navy text-sm">{title}</span>
+                <span className="badge badge-primary">{tradeCategory}</span>
+              </div>
+              <p className="text-slate-700">{description}</p>
+              <div className="grid grid-cols-2 gap-2 text-[11px] text-muted">
                 <div>
-                  <span className="badge badge-primary text-[10px] mb-1">{tradeCategory}</span>
-                  <h3 className="text-base font-extrabold text-navy">{title}</h3>
-                  <p className="text-xs text-muted mt-0.5">{workAddress}</p>
+                  <strong>Pay:</strong> ₹{salaryMin.toLocaleString()} – ₹{salaryMax.toLocaleString()}/mo
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-extrabold text-emerald-700">
-                    ₹{salaryMin.toLocaleString()} – ₹{salaryMax.toLocaleString()} / mo
-                  </div>
-                  <span className="text-[10px] text-muted">{openings} Openings • {shift}</span>
+                <div>
+                  <strong>Location:</strong> {city}
                 </div>
-              </div>
-
-              <p className="text-xs text-slate-700 leading-relaxed pt-2 border-t">
-                {description}
-              </p>
-
-              <div className="pt-2 border-t">
-                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                  Required Skills:
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {skillsStr.split(',').map((s, i) => (
-                    <span key={i} className="badge badge-neutral text-[10px]">
-                      {s.trim()}
-                    </span>
-                  ))}
+                <div>
+                  <strong>Openings:</strong> {openings}
+                </div>
+                <div>
+                  <strong>Shift:</strong> {shift}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Wizard Footer Nav */}
+        {/* Action Controls */}
         <div className="flex items-center justify-between pt-6 border-t mt-6">
           {currentStep > 1 ? (
             <button
-              onClick={() => setCurrentStep((prev) => prev - 1)}
-              className="btn btn-secondary btn-sm text-xs flex items-center gap-1"
+              type="button"
+              onClick={() => setCurrentStep((s) => s - 1)}
+              className="btn btn-secondary btn-sm text-xs"
             >
-              <ArrowLeft className="w-4 h-4" /> Previous
+              {t('common:actions.back', 'Back')}
             </button>
           ) : (
             <div />
@@ -400,17 +418,20 @@ export const JobCreationPage: React.FC<JobCreationPageProps> = ({ onNavigate }) 
 
           {currentStep < 4 ? (
             <button
+              type="button"
               onClick={handleNext}
               className="btn btn-primary btn-sm text-xs flex items-center gap-1"
             >
-              Next Step <ArrowRight className="w-4 h-4" />
+              {t('common:actions.next', 'Next Step')} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
             <button
+              type="button"
               onClick={handlePublish}
-              className="btn btn-success btn-sm text-xs font-bold flex items-center gap-1.5"
+              className="btn btn-primary btn-sm text-xs flex items-center gap-1 font-bold"
             >
-              <CheckCircle2 className="w-4 h-4" /> Publish Job to Live Feed
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              {t('employer:jobCreation.publishJob', 'Publish Job Opening')}
             </button>
           )}
         </div>

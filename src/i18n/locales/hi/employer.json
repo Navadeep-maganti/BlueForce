@@ -1,0 +1,49 @@
+{
+  "overview": "भर्ती सारांश",
+  "welcomeTitle": "औद्योगिक भर्ती केंद्र",
+  "postNewJob": "नई नौकरी पोस्ट करें",
+  "activeJobs": "सक्रिय नौकरियाँ",
+  "totalApplications": "कुल आवेदन",
+  "shortlistedCandidates": "शॉर्टलिस्ट",
+  "interviewsScheduled": "निर्धारित साक्षात्कार",
+  "offersMade": "प्रस्ताव दिए गए",
+  "hiredCandidates": "नियुक्त",
+  "topCandidates": "शीर्ष मिलान वाले उम्मीदवार",
+  "topCandidatesDesc": "ट्रेड प्रमाणन, सत्यापित अनुभव और 100-पॉइंट ट्रस्ट स्कोर पर आधारित AI मिलान।",
+  "viewPipeline": "पाइपलाइन देखें",
+  "matchScore": "मिलान स्कोर",
+  "candidateSearch": "उम्मीदवार खोजें",
+  "pipelineTitle": "भर्ती पाइपलाइन",
+  "stages": {
+    "applied": "आवेदन किया ({{count}})",
+    "shortlisted": "शॉर्टलिस्ट ({{count}})",
+    "interview": "साक्षात्कार ({{count}})",
+    "offer": "प्रस्ताव ({{count}})",
+    "hired": "नियुक्त ({{count}})",
+    "rejected": "अस्वीकृत ({{count}})"
+  },
+  "jobCreation": {
+    "title": "नौकरी का अवसर बनाएँ",
+    "subtitle": "12,000+ प्रमाणित तकनीशियनों के लिए सत्यापित औद्योगिक नौकरी प्रकाशित करें।",
+    "jobTitle": "नौकरी का पद",
+    "jobTitlePlaceholder": "उदा. सीनियर सीएनसी लेथ ऑपरेटर",
+    "tradeCategory": "ट्रेड श्रेणी",
+    "vacancies": "रिक्तियों की संख्या",
+    "location": "स्थान / शहर",
+    "salaryMin": "न्यूनतम मासिक वेतन (₹)",
+    "salaryMax": "अधिकतम मासिक वेतन (₹)",
+    "minExperience": "न्यूनतम आवश्यक अनुभव (वर्ष)",
+    "certificationsRequired": "आवश्यक प्रमाण-पत्र",
+    "jobDescription": "विस्तृत नौकरी विवरण",
+    "jobDescriptionPlaceholder": "शिफ्ट का समय, मशीन के प्रकार, ओवरटाइम नीति, भोजन/आवास का विवरण लिखें...",
+    "publishJob": "नौकरी प्रकाशित करें",
+    "saveDraft": "ड्राफ़्ट सहेजें",
+    "publishedSuccess": "नौकरी सफलतापूर्वक प्रकाशित की गई!"
+  },
+  "analytics": {
+    "title": "भर्ती और प्रतिभा एनालिटिक्स",
+    "timeToHire": "औसत भर्ती समय",
+    "verifiedRatio": "सत्यापित उम्मीदवार",
+    "applicationFunnel": "आवेदन फ़नल"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "overview": "Recruitment Overview",
+  "welcomeTitle": "Enterprise Hiring Hub",
+  "postNewJob": "Post a New Opening",
+  "activeJobs": "Active Openings",
+  "totalApplications": "Total Applications",
+  "shortlistedCandidates": "Shortlisted",
+  "interviewsScheduled": "Interviews Scheduled",
+  "offersMade": "Offers Extended",
+  "hiredCandidates": "Hired",
+  "topCandidates": "Top Matching Candidates",
+  "topCandidatesDesc": "AI matched based on trade certifications, verified experience, and 100-pt Trust Score.",
+  "viewPipeline": "View Pipeline",
+  "matchScore": "Match Score",
+  "candidateSearch": "Search Candidates",
+  "pipelineTitle": "Recruitment Pipeline",
+  "stages": {
+    "applied": "Applied ({{count}})",
+    "shortlisted": "Shortlisted ({{count}})",
+    "interview": "Interview ({{count}})",
+    "offer": "Offer ({{count}})",
+    "hired": "Hired ({{count}})",
+    "rejected": "Rejected ({{count}})"
+  },
+  "jobCreation": {
+    "title": "Create Job Opening",
+    "subtitle": "Publish a verified industrial opening to 12,000+ certified technicians.",
+    "jobTitle": "Job Title",
+    "jobTitlePlaceholder": "e.g. Senior CNC Lathe Operator",
+    "tradeCategory": "Trade Category",
+    "vacancies": "Number of Openings",
+    "location": "Job Location / City",
+    "salaryMin": "Minimum Monthly Salary (₹)",
+    "salaryMax": "Maximum Monthly Salary (₹)",
+    "minExperience": "Minimum Experience Required (Years)",
+    "certificationsRequired": "Required Certifications",
+    "jobDescription": "Detailed Job Description",
+    "jobDescriptionPlaceholder": "Describe shift timing, machine types, overtime policy, food/accommodation...",
+    "publishJob": "Publish Job",
+    "saveDraft": "Save as Draft",
+    "publishedSuccess": "Job opening published successfully!"
+  },
+  "analytics": {
+    "title": "Hiring & Talent Analytics",
+    "timeToHire": "Avg Time to Hire",
+    "verifiedRatio": "Verified Candidates",
+    "applicationFunnel": "Application Funnel"
+  }
+}

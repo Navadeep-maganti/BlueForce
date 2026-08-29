@@ -1,0 +1,36 @@
+{
+  "title": "My Job Applications",
+  "subtitle": "Track your active applications, screening updates, interview calls, and hiring offers.",
+  "tabs": {
+    "all": "All Applications ({{count}})",
+    "active": "In Progress ({{count}})",
+    "interviews": "Interviews ({{count}})",
+    "hired": "Hired & Offers ({{count}})",
+    "archived": "Archived ({{count}})"
+  },
+  "statusStages": {
+    "applied": "Application Submitted",
+    "screening": "Profile in Screening",
+    "shortlisted": "Shortlisted by Employer",
+    "interview": "Interview Scheduled",
+    "offered": "Job Offer Extended",
+    "hired": "Successfully Hired 🎉",
+    "rejected": "Not Selected",
+    "withdrawn": "Application Withdrawn"
+  },
+  "timeline": {
+    "title": "Application Timeline",
+    "appliedOn": "Applied on {{date}}",
+    "statusUpdated": "Status updated to {{status}} on {{date}}",
+    "interviewTime": "Interview scheduled for {{time}}",
+    "location": "Location / Mode: {{location}}"
+  },
+  "actions": {
+    "viewJob": "View Job Posting",
+    "withdraw": "Withdraw Application",
+    "confirmInterview": "Confirm Attendance",
+    "reschedule": "Request Reschedule"
+  },
+  "emptyState": "You have not submitted any job applications yet.",
+  "emptyStateCta": "Browse Recommended Openings"
+}

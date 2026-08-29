@@ -1,0 +1,22 @@
+{
+  "general": {
+    "somethingWentWrong": "Something went wrong",
+    "tryAgainLater": "Please try again in a few moments or refresh the page.",
+    "networkError": "Network connection error. Please check your internet connection.",
+    "notFound": "Requested page or resource not found.",
+    "unauthorized": "You do not have permission to access this area.",
+    "sessionExpired": "Your session has expired. Please sign in again."
+  },
+  "validation": {
+    "fieldRequired": "This field is required.",
+    "invalidPhone": "Please enter a valid Indian 10-digit phone number.",
+    "invalidEmail": "Please enter a valid email address.",
+    "invalidNumber": "Please enter a valid numerical value.",
+    "minCharacters": "Must be at least {{min}} characters."
+  },
+  "upload": {
+    "fileTooLarge": "File size exceeds the 10MB limit.",
+    "unsupportedFormat": "Unsupported file format. Please upload JPG, PNG, or PDF.",
+    "uploadFailed": "Upload failed. Please try again."
+  }
+}

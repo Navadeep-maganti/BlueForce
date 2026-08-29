@@ -1,0 +1,52 @@
+{
+  "greeting": "Good morning",
+  "welcomeBack": "Welcome back, {{name}}",
+  "profileStrength": "Profile Strength",
+  "profileCompletion": "{{percent}}% complete",
+  "trustScoreTitle": "Your Trust Score",
+  "trustScoreHelp": "A higher score unlocks priority ranking with verified industrial employers.",
+  "recommendedJobs": "Recommended Jobs for You",
+  "careerInsights": "Career Insights & Growth",
+  "unlockJobsTip": "Add one more verified skill to unlock more high-paying openings.",
+  "quickApply": "Quick Apply",
+  "applied": "Applied",
+  "applyNow": "Apply Now",
+  "verifiedBadge": "Verified Credentials",
+  "primaryTrade": "Primary Trade",
+  "experience": "Experience",
+  "experienceYears": "{{years}} years experience",
+  "preferredLocation": "Preferred Location",
+  "expectedSalary": "Expected Salary",
+  "availability": "Availability",
+  "immediateJoining": "Available for Immediate Joining",
+  "daysNotice": "{{days}} days notice",
+  "tabs": {
+    "overview": "Overview",
+    "skills": "Skills & Assessments",
+    "workProof": "Work Proof Gallery",
+    "certifications": "Certifications & ID",
+    "experience": "Experience History",
+    "preferences": "Job Preferences"
+  },
+  "workProof": {
+    "title": "Photo & Video Work Proof",
+    "subtitle": "Showcase real photos and videos of your technical work on the job.",
+    "uploadBtn": "Upload New Work Proof",
+    "verifiedByEmployer": "Verified by past employer",
+    "emptyState": "No work proof uploaded yet. Upload pictures of your welding, wiring, or fabrication work to increase your Trust Score."
+  },
+  "certifications": {
+    "title": "Government & Trade Certificates",
+    "subtitle": "NSDC, NCVT, ITI, or industrial apprenticeship credentials.",
+    "addCert": "Add Certificate",
+    "verifiedOn": "Verified on {{date}}"
+  },
+  "stats": {
+    "appliedJobs": "Applied Jobs",
+    "shortlisted": "Shortlisted",
+    "interviews": "Interviews",
+    "profileViews": "Profile Views"
+  },
+  "upcomingInterviews": "Upcoming Interviews",
+  "noInterviews": "No upcoming interviews scheduled yet."
+}

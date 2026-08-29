@@ -1,0 +1,52 @@
+{
+  "greeting": "सुप्रभात",
+  "welcomeBack": "वापसी पर स्वागत है, {{name}}",
+  "profileStrength": "प्रोफ़ाइल पूर्णता",
+  "profileCompletion": "{{percent}}% पूर्ण",
+  "trustScoreTitle": "आपका ट्रस्ट स्कोर",
+  "trustScoreHelp": "उच्च स्कोर सत्यापित औद्योगिक नियोक्ताओं के साथ प्राथमिकता रैंकिंग दिलाता है।",
+  "recommendedJobs": "आपके लिए सुझाई गई नौकरियाँ",
+  "careerInsights": "करियर मार्गदर्शन और प्रगति",
+  "unlockJobsTip": "अधिक वेतन वाले अवसर पाने के लिए एक और सत्यापित कौशल जोड़ें।",
+  "quickApply": "त्वरित आवेदन",
+  "applied": "आवेदन किया",
+  "applyNow": "अभी आवेदन करें",
+  "verifiedBadge": "सत्यापित प्रमाण-पत्र",
+  "primaryTrade": "प्राथमिक ट्रेड",
+  "experience": "अनुभव",
+  "experienceYears": "{{years}} वर्ष का अनुभव",
+  "preferredLocation": "पसंदीदा स्थान",
+  "expectedSalary": "अपेक्षित वेतन",
+  "availability": "उपलब्धता",
+  "immediateJoining": "तत्काल जॉइनिंग के लिए उपलब्ध",
+  "daysNotice": "{{days}} दिनों का नोटिस",
+  "tabs": {
+    "overview": "अवलोकन",
+    "skills": "कौशल और मूल्यांकन",
+    "workProof": "कार्य प्रमाण गैलरी",
+    "certifications": "प्रमाण-पत्र और पहचान",
+    "experience": "कार्य अनुभव",
+    "preferences": "नौकरी प्राथमिकताएँ"
+  },
+  "workProof": {
+    "title": "फ़ोटो और वीडियो कार्य प्रमाण",
+    "subtitle": "कार्यस्थल पर अपने तकनीकी काम के वास्तविक फ़ोटो और वीडियो दिखाएँ।",
+    "uploadBtn": "नया कार्य प्रमाण अपलोड करें",
+    "verifiedByEmployer": "पूर्व नियोक्ता द्वारा सत्यापित",
+    "emptyState": "अभी तक कोई कार्य प्रमाण अपलोड नहीं किया गया है। अपना ट्रस्ट स्कोर बढ़ाने के लिए अपने वेल्डिंग, वायरिंग या निर्माण कार्य की तस्वीरें अपलोड करें।"
+  },
+  "certifications": {
+    "title": "सरकारी और ट्रेड प्रमाण-पत्र",
+    "subtitle": "NSDC, NCVT, ITI, या औद्योगिक शिक्षुता प्रमाण-पत्र।",
+    "addCert": "प्रमाण-पत्र जोड़ें",
+    "verifiedOn": "{{date}} को सत्यापित"
+  },
+  "stats": {
+    "appliedJobs": "आवेदन की गई नौकरियाँ",
+    "shortlisted": "शॉर्टलिस्ट",
+    "interviews": "साक्षात्कार",
+    "profileViews": "प्रोफ़ाइल व्यू"
+  },
+  "upcomingInterviews": "आगामी साक्षात्कार",
+  "noInterviews": "अभी कोई आगामी साक्षात्कार निर्धारित नहीं है।"
+}
